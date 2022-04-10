@@ -5,7 +5,7 @@
     void yyerror(char *s);
 %}
 
-%union {int num;}
+%union {int num; char str[63]; }
 %start program
 /* reserved words begin */
 %token PROGRAM PROCEDURE FUNCTION
@@ -13,12 +13,14 @@
 %token CONST VAR ARRAY TYPE RECORD OF PACKED
 %token AND OR NOT DIV MOD
 /* reserved words end */
-
+/* reserved symbol begin */
+%token ASSIGN DELIMITER
+/* reserved symbol end */
 /* middle words begin */
-
+%token body
 /* middle words end */
 
-
+%token <str> ID
 %token <num> number
 %token enter terminate 
 %type <num> expr
@@ -27,7 +29,7 @@
 %right '^'
 
 %%
-program : PROGRAM {printf("program %s \n", $2);}
+program : PROGRAM ID DELIMITER {printf("%s\n", $2);}
 statement: line statement
         | enter statement
         | terminate {return 0;}

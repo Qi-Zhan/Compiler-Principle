@@ -1,5 +1,5 @@
 
-/*  A Bison parser, made from .\parse.y
+/*  A Bison parser, made from parse.y
     by GNU Bison version 1.28  */
 
 #define YYBISON 1  /* Identify Bison output.  */
@@ -33,19 +33,23 @@
 #define	NOT	283
 #define	DIV	284
 #define	MOD	285
-#define	number	286
-#define	enter	287
-#define	terminate	288
+#define	ASSIGN	286
+#define	DELIMITER	287
+#define	body	288
+#define	ID	289
+#define	number	290
+#define	enter	291
+#define	terminate	292
 
-#line 1 ".\parse.y"
+#line 1 "parse.y"
 
     #include<stdio.h>
     #include<math.h>
     void print(double res);
     void yyerror(char *s);
 
-#line 8 ".\parse.y"
-typedef union {int num;} YYSTYPE;
+#line 8 "parse.y"
+typedef union {int num; char str[63]; } YYSTYPE;
 #include <stdio.h>
 
 #ifndef __cplusplus
@@ -56,23 +60,23 @@ typedef union {int num;} YYSTYPE;
 
 
 
-#define	YYFINAL		4
+#define	YYFINAL		6
 #define	YYFLAG		-32768
-#define	YYNTBASE	42
+#define	YYNTBASE	46
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 288 ? yytranslate[x] : 43)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 292 ? yytranslate[x] : 47)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,     2,    40,
-    41,    37,    35,     2,    36,     2,    38,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,    44,
+    45,    41,    39,     2,    40,     2,    42,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,    39,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,    43,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -91,29 +95,30 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     1,     3,     4,     5,     6,
      7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
     17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-    27,    28,    29,    30,    31,    32,    33,    34
+    27,    28,    29,    30,    31,    32,    33,    34,    35,    36,
+    37,    38
 };
 
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
-     0,     2,     5,     8,    10,    12,    15,    19,    23,    27,
-    31,    35,    38,    42
+     0,     4,     7,    10,    12,    14,    17,    21,    25,    29,
+    33,    37,    40,    44
 };
 
 static const short yyrhs[] = {     3,
-     0,     0,     0,     0,    33,     0,     0,    34,     0,     0,
-     0,     0,    33,     0,     0,    35,     0,     0,     0,    36,
-     0,     0,     0,    37,     0,     0,     0,    38,     0,     0,
-     0,    39,     0,     0,    36,     0,     0,    40,     0,    41,
-     0,    32,     0
+    35,    33,     0,     0,     0,     0,    37,     0,     0,    38,
+     0,     0,     0,     0,    37,     0,     0,    39,     0,     0,
+     0,    40,     0,     0,     0,    41,     0,     0,     0,    42,
+     0,     0,     0,    43,     0,     0,    40,     0,     0,    44,
+     0,    45,     0,    36,     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    30,    31,    32,    33,    34,    36,    38,    39,    40,    41,
-    42,    43,    44,    45
+    33,    34,    35,    36,    37,    39,    41,    42,    43,    44,
+    45,    46,    47,    48
 };
 #endif
 
@@ -123,45 +128,45 @@ static const short yyrline[] = { 0,
 static const char * const yytname[] = {   "$","error","$undefined.","PROGRAM",
 "PROCEDURE","FUNCTION","BEGIN","END","IF","THEN","ELSE","CASE","WHILE","DO",
 "UNTIL","REPEAR","FOR","TO","GOTO","DOWNTO","CONST","VAR","ARRAY","TYPE","RECORD",
-"OF","PACKED","AND","OR","NOT","DIV","MOD","number","enter","terminate","'+'",
-"'-'","'*'","'/'","'^'","'('","')'","program", NULL
+"OF","PACKED","AND","OR","NOT","DIV","MOD","ASSIGN","DELIMITER","body","ID",
+"number","enter","terminate","'+'","'-'","'*'","'/'","'^'","'('","')'","program", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
-    42,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+    46,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
     -1,    -1,    -1,    -1
 };
 
 static const short yyr2[] = {     0,
-     1,     2,     2,     1,     1,     2,     3,     3,     3,     3,
+     3,     2,     2,     1,     1,     2,     3,     3,     3,     3,
      3,     2,     3,     1
 };
 
 static const short yydefact[] = {     0,
-     1,     0,     0,     0
+     0,     0,     1,     0,     0,     0
 };
 
-static const short yydefgoto[] = {     2
+static const short yydefgoto[] = {     4
 };
 
 static const short yypact[] = {    -3,
--32768,     1,     2,-32768
+   -34,   -31,-32768,     3,     4,-32768
 };
 
 static const short yypgoto[] = {-32768
 };
 
 
-#define	YYLAST		2
+#define	YYLAST		4
 
 
 static const short yytable[] = {     1,
-     3,     4
+     2,     3,     5,     6
 };
 
 static const short yycheck[] = {     3,
-     0,     0
+    35,    33,     0,     0
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "/usr/local/share/bison.simple"
@@ -707,47 +712,47 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 30 ".\parse.y"
-{printf("program\n");;
+#line 33 "parse.y"
+{printf("%s\n", yyvsp[-1].str);;
     break;}
 case 4:
-#line 33 ".\parse.y"
+#line 36 "parse.y"
 {return 0;;
     break;}
 case 6:
-#line 36 ".\parse.y"
+#line 39 "parse.y"
 {print(yyvsp[-1].num);;
     break;}
 case 7:
-#line 38 ".\parse.y"
+#line 41 "parse.y"
 {yyval.num = yyvsp[-2].num+yyvsp[0].num;;
     break;}
 case 8:
-#line 39 ".\parse.y"
+#line 42 "parse.y"
 {yyval.num = yyvsp[-2].num-yyvsp[0].num;;
     break;}
 case 9:
-#line 40 ".\parse.y"
+#line 43 "parse.y"
 {yyval.num = yyvsp[-2].num*yyvsp[0].num;;
     break;}
 case 10:
-#line 41 ".\parse.y"
+#line 44 "parse.y"
 {yyval.num = yyvsp[-2].num/yyvsp[0].num;;
     break;}
 case 11:
-#line 42 ".\parse.y"
+#line 45 "parse.y"
 {yyval.num = pow(yyvsp[-2].num,yyvsp[0].num);;
     break;}
 case 12:
-#line 43 ".\parse.y"
+#line 46 "parse.y"
 {yyval.num = -yyvsp[0].num;;
     break;}
 case 13:
-#line 44 ".\parse.y"
+#line 47 "parse.y"
 {yyval.num = yyvsp[-1].num;;
     break;}
 case 14:
-#line 45 ".\parse.y"
+#line 48 "parse.y"
 {yyval.num = yyvsp[0].num;;
     break;}
 }
@@ -972,7 +977,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 47 ".\parse.y"
+#line 50 "parse.y"
 
 
 int main(int argc, const char *argv[]) {

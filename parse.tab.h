@@ -1,4 +1,4 @@
-typedef union {int num;} YYSTYPE;
+typedef union {int num; char str[63]; } YYSTYPE;
 #define	PROGRAM	257
 #define	PROCEDURE	258
 #define	FUNCTION	259
@@ -28,9 +28,13 @@ typedef union {int num;} YYSTYPE;
 #define	NOT	283
 #define	DIV	284
 #define	MOD	285
-#define	number	286
-#define	enter	287
-#define	terminate	288
+#define	ASSIGN	286
+#define	DELIMITER	287
+#define	body	288
+#define	ID	289
+#define	number	290
+#define	enter	291
+#define	terminate	292
 
 
 extern YYSTYPE yylval;
