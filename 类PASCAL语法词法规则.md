@@ -19,4 +19,13 @@ and or not div mod
 program program_name;
 
 ```
+## 语义
+```
+decl → var-list : type var-list.dtype = type.dtype
+var-list1 → var-list2, id id .dtype = var-list1.dtype 
+var-list2.dtype = var-list1.dtype
+var-list → id id .dtype = var-list.dtype
+type → integer type.dtype = integer
+type → real type.dtype = real
+```
 
