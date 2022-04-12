@@ -11,7 +11,7 @@ typedef union {int num; char str[63]; } YYSTYPE;
 #define	WHILE	266
 #define	DO	267
 #define	UNTIL	268
-#define	REPEAR	269
+#define	REPEAT	269
 #define	FOR	270
 #define	TO	271
 #define	GOTO	272
@@ -28,13 +28,24 @@ typedef union {int num; char str[63]; } YYSTYPE;
 #define	NOT	283
 #define	DIV	284
 #define	MOD	285
-#define	ASSIGN	286
-#define	DELIMITER	287
-#define	body	288
-#define	ID	289
-#define	number	290
-#define	enter	291
-#define	terminate	292
+#define	INTEGER	286
+#define	REAL	287
+#define	BOOLEAN	288
+#define	CHAR	289
+#define	TRUE	290
+#define	FALSE	291
+#define	ASSIGN	292
+#define	DELIMITER	293
+#define	NEQ	294
+#define	DOTDOT	295
+#define	DOT	296
+#define	LT	297
+#define	LEQ	298
+#define	GEQ	299
+#define	GT	300
+#define	EQ	301
+#define	ID	302
+#define	number	303
 
 
 extern YYSTYPE yylval;

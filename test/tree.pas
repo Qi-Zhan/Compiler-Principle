@@ -3,6 +3,7 @@ var
 	a:array[0..39] of integer;
 	b,p:array[0..1599] of integer;
 	n,i:integer;
+	
 function tree(l,r:integer):integer;
 var
 	k,i:integer;

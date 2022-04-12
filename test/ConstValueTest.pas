@@ -6,7 +6,6 @@ const
 	d = b + 1;
 	e = 'a';
 	f = true;
-	g = maxint + a;
 
 begin
 	writeln(a);
@@ -15,5 +14,4 @@ begin
 	writeln(d);
 	writeln(e);
 	writeln(f);
-	writeln(g);
 end.
