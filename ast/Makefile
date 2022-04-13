@@ -1,5 +1,5 @@
-compiler: lex.yy.c parse.tab.c
-	gcc lex.yy.c parse.tab.c -o compiler
+all : lex.yy.c parse.tab.c
+
 parse.tab.c, parse.tab.h: parse.y
 	bison -d parse.y
 

@@ -56,11 +56,11 @@
 
     #include<stdio.h>
     #include<math.h>
-    void print(double res);
     void yyerror(char *s);
     extern int yylineno;
     extern FILE* yyin;
     extern char* yytext;
+    extern int yylex(void);
     extern int yylineno;
 
 #line 12 "parse.y"
@@ -1108,8 +1108,8 @@ yyerrhandle:
 #line 120 "parse.y"
 
 
-int main(int argc, const char *argv[]) {
-    /* yyparse(); */
+/* int main(int argc, const char *argv[]) {
+    yyparse(); 
     if(argc != 2) {
         printf("Usage: %s <file>\n", argv[0]);
         return 0;
@@ -1119,11 +1119,8 @@ int main(int argc, const char *argv[]) {
     printf("result: %d\n",result);
     fclose(yyin);
     return 0;
-}
+} */
 
-void print(double res){
-    printf("%g\n", res);
-}
 
 void yyerror(char *s) {
     fprintf(stderr, "line %d: %s at %s\n",yylineno, s,yytext);
