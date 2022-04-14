@@ -27,14 +27,9 @@
 %token <str> IDENTIFIER
 %token <num> number
 /* %type <num> expr */
-%left ','
-%left '='
-%left OR_OP
-%left AND_OP
-%left EQ_OP NE_OP
-%left GE_OP LE_OP '>' '<'
 %left '+''-'
-%left '*''/' '%'
+%left '*''/'
+%right '^'
 
 %%
 /* SSC无非是由一个个声明/定义构成的 */
@@ -51,36 +46,56 @@ external_declaration
 
 /* 指定类型 要声明列表 */ 
 declaration
-        : declaration_specifiers identifier_list ';' {}
-        | declaration_specifiers identifier_list '=' expression ';' {}
+        : declaration_specifiers init_declarator_list ';' {}
 	    /* | declaration_specifiers ';' {} */
-        ;
+	    ;
 
 declaration_specifiers
-        : type_qualifier type_specifier
+        : type_qualifier
         | type_specifier
-        ;
+
 /* 可以同时声明多个变量, int a, b ,c; */
-
+init_declarator_list
+        : init_declarator
+        | init_declarator_list ',' init_declarator
+        ;
 /* 可以只声明，也可以同时初始化 */
-
+init_declarator
+        : declarator
+	    | declarator '=' initializer
+	    ;
 
 /* 对象可以是ID, 也可以是数组 */
+declarator
+        : IDENTIFIER
+        | declaration '[' expression ']'
+        | declaration '(' ')'
+        | declarator '(' parameter_list ')'
+        | declarator '(' identifier_list ')'
+        | declarator '(' ')'
 
 identifier_list
         : IDENTIFIER
         | identifier_list ',' IDENTIFIER
-        ;
 
 parameter_list
-        : declaration_specifiers IDENTIFIER
-        | parameter_list ',' declaration_specifiers IDENTIFIER
+        : parameter_declaration
+        | parameter_list ',' parameter_declaration
+        ;
+
+parameter_declaration
+        : declaration_specifiers declarator
+        /* | declaration_specifiers */
         ;        
 /* todo: 初始化数组{} */
+initializer
+	    : expression
 
 function_definition
-        : declaration_specifiers IDENTIFIER '(' parameter_list ')' compound_statement {}
-        | declaration_specifiers IDENTIFIER '(' ')' compound_statement {}
+        : declaration_specifiers declarator declaration_list compound_statement {}
+        | declaration_specifiers declarator compound_statement {}
+        | declarator declaration_list compound_statement {}
+        | declarator compound_statement {}
         ;
 
 compound_statement
@@ -92,8 +107,7 @@ compound_statement
 
 declaration_list
         : declaration
-        | declaration_list  declaration
-        ;
+        | declaration_list declaration
 
 statement_list
         : statement
@@ -108,19 +122,14 @@ statement
         | jump_statement
         ;
 
-expression_list
-        : expression_list ',' expression
-        | expression
-        ;
-
 expression_statement
         : ';' {}
         | expression ';' {}
         ;
 
 selection_statement
-        : IF '(' expression ')' statement ELSE statement {}
-        | IF '(' expression ')' statement {}
+        : IF '(' expression ')' statement {}
+        | IF '(' expression ')' statement ELSE statement {}
         | SWITCH '(' expression ')' statement {}
         ;
 
@@ -140,26 +149,23 @@ jump_statement
         ;
 
 expression
-        : expression '+' expression 
-        | expression '-' expression
-        | expression '*' expression
-        | expression '/' expression
-        | expression AND_OP expression
-        | expression OR_OP expression
-        | expression LE_OP expression       
-        | expression NE_OP expression
-        | expression GE_OP expression
-        | expression EQ_OP expression             
-        | expression '=' expression
-        | IDENTIFIER '[' expression ']' {}
-        | IDENTIFIER '(' expression_list ')' {}
-        | IDENTIFIER {} 
-        | CONSTANT {;}
-        | STRING_LITERAL {}
-        | '(' expression ')' {}
+        : primary_expression '+' primary_expression
+        | primary_expression '-' primary_expression
+        | primary_expression '*' primary_expression
+        | primary_expression '/' primary_expression
+        | primary_expression AND_OP primary_expression
+        | primary_expression OR_OP primary_expression
+        | unary_operator primary_expression
+        | primary_expression
+        | expression '[' expression ']'
+        | expression '(' ')'
+        | expression '(' argument_expression_list ')'
+        /* : assignment_expression {} */
+        /* | expression ',' assignment_expression */
         ;
-        /*  | unary_operator expression */
-
+argument_expression_list:
+        | expression
+        | argument_expression_list ',' expression
 /* assignment_expression
         :   */
 
@@ -185,6 +191,13 @@ unary_operator
         | '!'
         ;
 
+
+primary_expression
+        : IDENTIFIER {}
+        | CONSTANT {;}
+        | STRING_LITERAL {}
+        | '(' expression ')' {}
+        ;
 %%
 
 
