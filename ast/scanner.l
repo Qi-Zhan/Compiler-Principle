@@ -8,48 +8,42 @@ void yyerror (char *s);
 %option caseless
 %option yylineno
 %%
-"program"             {return PROGRAM;}
-"procedure"            {return PROCEDURE;}
-"function"              {return FUNCTION;}
-"begin"               {return BEGIN;}
-"end"                   {return END;}
-"if"                    {return IF;}
-"then"                   {return THEN;}
-"else"                    {return ELSE;}
-"case"                   {return CASE;}
-"while"                     {return WHILE;}
-"do"                       {return DO;}
-"until"                     {return UNTIL;}
-"repeat"                    {return REPEAT;}
-"for"                       {return FOR;}
-"to"                        {return TO;}
-"goto"                      {return GOTO;}
-"downto"                    {return DOWNTO;}
-"const"                     {return CONST;}
-"var"                        {return VAR;}
-"array"                       {return ARRAY;}
-"type"                          {return TYPE;}
-"record"                        {return RECORD;}
-"of"                            {return OF;}
-"packed"                        {return PACKED;}
-"and"                           {return AND;}
-"or"                            {return OR;}
-"not"                           {return NOT;}
-"div"                           {return DIV;}
-"mod"                           {return MOD;}
-"integer"                       {return INTEGER;}
-"real"                          {return REAL;}
-"boolean"                       {return BOOLEAN;}
-"char"                          {return CHAR;}
-"true"                           {return TRUE;}
-"false"                         {return FALSE;}
 
-".."                            {return DOTDOT;}
-"."                             {return DOT;}
-":="                    {return ASSIGN;}
-":"                     {return yytext[0];}
-","                     {return yytext[0];}
-";"                  {return DELIMITER;}
+"break"               {return BREAK;}
+"case"                   {return CASE;}
+"char"                      {return CHAR;}
+"const"                     {return CONST;}
+"continue"                  {return CONTINUE;}
+"do"                       {return DO;}
+"double"		        { return DOUBLE; }
+"default"                   {return DEFAULT;}
+"else"                    {return ELSE;}
+"enum"                      {return ENUM;}
+"float"			            { return FLOAT; }
+"for"                       {return FOR;}
+"if"                    {return IF;}
+"int"                       {return INT;}
+"return"                    {return RETURN;}
+"extern"                    {return EXTERN;}
+"sizeof"		        { return SIZEOF; }
+"static"		        {  return STATIC; }
+"struct"		        {  return STRUCT ; }
+"switch"		        {   return SWITCH ; }
+"union"                     {return UNION;}
+"goto"                        {return GOTO;}
+"typedef"                          {return TYPEDEF;}
+"void"                              {return VOID;}
+"while"                     {return WHILE;}
+
+
+"&&"			{   return  AND_OP ; }
+"||"			{   return OR_OP ; }
+"<="			{   return LE_OP ; }
+">="			{   return GE_OP ; }
+"=="			{   return EQ_OP ; }
+"!="			{   return NE_OP ; }
+","                     {return yytext[0]; }
+";"                  {return yytext[0];}
 "+"                 {return yytext[0];}
 "-"                 {return yytext[0];}
 "*"                  {return yytext[0];}
@@ -59,18 +53,19 @@ void yyerror (char *s);
 ")"                 {return yytext[0];}
 "["                 {return yytext[0];}
 "]"                 {return yytext[0];}
-"="                     {return EQ;}
-"<>"                    {return NEQ;}
-"<"                     {return LT;}
-">"                     {return GT;}
-"<="                     {return LEQ;}
-">="                     {return GEQ;}
+"{"                 { return yytext[0];}
+"}"                 {return yytext[0];}
+"="                     {return yytext[0];}
+"<"                     {return yytext[0];}
+">"                     {return yytext[0];}
+"!"                     {return yytext[0];}
+"~"                     {return yytext[0];}
+[0-9]+                 {yylval.num = atoi(yytext); return CONSTANT;}
+[0-9]+\.[0-9]+          {yylval.num = atof(yytext); return CONSTANT;}
+[a-zA-Z][a-zA-Z0-9]*     {  for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; return IDENTIFIER;}
+<<EOF>>                  { yyterminate();}
 \n                   {}
 " "                 {}
-[0-9]+                 {yylval.num = atoi(yytext); return number;}
-[0-9]+\.[0-9]+          {yylval.num = atof(yytext); return number;}
-[a-zA-Z][a-zA-Z0-9]*     {  for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; return ID;}
-<<EOF>>                  { yyterminate();}
 .                      {ECHO; yyerror (" unexpected character");}
 
 %%

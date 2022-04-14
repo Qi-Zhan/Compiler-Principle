@@ -1,51 +1,120 @@
-typedef union {int num; char str[63]; } YYSTYPE;
-#define	PROGRAM	257
-#define	PROCEDURE	258
-#define	FUNCTION	259
-#define	BEGIN	260
-#define	END	261
-#define	IF	262
-#define	THEN	263
-#define	ELSE	264
-#define	CASE	265
-#define	WHILE	266
-#define	DO	267
-#define	UNTIL	268
-#define	REPEAT	269
-#define	FOR	270
-#define	TO	271
-#define	GOTO	272
-#define	DOWNTO	273
-#define	CONST	274
-#define	VAR	275
-#define	ARRAY	276
-#define	TYPE	277
-#define	RECORD	278
-#define	OF	279
-#define	PACKED	280
-#define	AND	281
-#define	OR	282
-#define	NOT	283
-#define	DIV	284
-#define	MOD	285
-#define	INTEGER	286
-#define	REAL	287
-#define	BOOLEAN	288
-#define	CHAR	289
-#define	TRUE	290
-#define	FALSE	291
-#define	ASSIGN	292
-#define	DELIMITER	293
-#define	NEQ	294
-#define	DOTDOT	295
-#define	DOT	296
-#define	LT	297
-#define	LEQ	298
-#define	GEQ	299
-#define	GT	300
-#define	EQ	301
-#define	ID	302
-#define	number	303
+/* A Bison parser, made by GNU Bison 3.7.5.  */
+
+/* Bison interface for Yacc-like parsers in C
+
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
+#ifndef YY_YY_PARSE_TAB_H_INCLUDED
+# define YY_YY_PARSE_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token kinds.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    CONSTANT = 258,                /* CONSTANT  */
+    STRING_LITERAL = 259,          /* STRING_LITERAL  */
+    SIZEOF = 260,                  /* SIZEOF  */
+    LE_OP = 261,                   /* LE_OP  */
+    GE_OP = 262,                   /* GE_OP  */
+    EQ_OP = 263,                   /* EQ_OP  */
+    NE_OP = 264,                   /* NE_OP  */
+    AND_OP = 265,                  /* AND_OP  */
+    OR_OP = 266,                   /* OR_OP  */
+    TYPEDEF = 267,                 /* TYPEDEF  */
+    EXTERN = 268,                  /* EXTERN  */
+    STATIC = 269,                  /* STATIC  */
+    AUTO = 270,                    /* AUTO  */
+    CHAR = 271,                    /* CHAR  */
+    INT = 272,                     /* INT  */
+    LONG = 273,                    /* LONG  */
+    SIGNED = 274,                  /* SIGNED  */
+    UNSIGNED = 275,                /* UNSIGNED  */
+    FLOAT = 276,                   /* FLOAT  */
+    DOUBLE = 277,                  /* DOUBLE  */
+    CONST = 278,                   /* CONST  */
+    VOID = 279,                    /* VOID  */
+    STRUCT = 280,                  /* STRUCT  */
+    UNION = 281,                   /* UNION  */
+    ENUM = 282,                    /* ENUM  */
+    CASE = 283,                    /* CASE  */
+    DEFAULT = 284,                 /* DEFAULT  */
+    IF = 285,                      /* IF  */
+    ELSE = 286,                    /* ELSE  */
+    SWITCH = 287,                  /* SWITCH  */
+    WHILE = 288,                   /* WHILE  */
+    DO = 289,                      /* DO  */
+    FOR = 290,                     /* FOR  */
+    GOTO = 291,                    /* GOTO  */
+    CONTINUE = 292,                /* CONTINUE  */
+    BREAK = 293,                   /* BREAK  */
+    RETURN = 294,                  /* RETURN  */
+    IDENTIFIER = 295,              /* IDENTIFIER  */
+    number = 296                   /* number  */
+  };
+  typedef enum yytokentype yytoken_kind_t;
+#endif
+
+/* Value type.  */
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+union YYSTYPE
+{
+#line 13 "parse.y"
+int num; char str[63]; 
+
+#line 108 "parse.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
+#endif
 
 
 extern YYSTYPE yylval;
+
+int yyparse (void);
+
+#endif /* !YY_YY_PARSE_TAB_H_INCLUDED  */

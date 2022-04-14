@@ -1,13 +1,11 @@
+all: main.cpp
+	make -C ast all
+	clang++ ./ast/lex.yy.c ./ast/parse.tab.c main.cpp -o  SSC
 
-
-all: ./ast/lex.yy.c ./ast/parse.tab.c main.cpp
-	clang++ ./ast/lex.yy.c ./ast/parse.tab.c main.cpp --target=i686-pc-mingw32 -o  Spascal
-
-./ast/lex.yy.c, ./ast/parse.tab.c: ./ast/makefile
-	cd ./ast  
-	make  
-	cd..
-
+# ast:
+	
 
 clean:
-	rm Spascal.exe
+	make -C ast clean
+	rm SSC 
+	

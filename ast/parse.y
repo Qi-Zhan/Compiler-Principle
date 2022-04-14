@@ -1,6 +1,7 @@
 %{
     #include<stdio.h>
     #include<math.h>
+    #include <iostream>
     void yyerror(char *s);
     extern int yylineno;
     extern FILE* yyin;
@@ -10,24 +11,20 @@
 %}
 
 %union {int num; char str[63]; }
-%start program
+%start ssc
 /* reserved words begin */
-%token PROGRAM PROCEDURE FUNCTION
-%token BEGIN END IF THEN ELSE CASE WHILE DO UNTIL REPEAT FOR TO GOTO DOWNTO
-%token CONST VAR ARRAY TYPE RECORD OF PACKED
-%token AND OR NOT DIV MOD
-%token INTEGER REAL BOOLEAN CHAR TRUE FALSE
+%token CONSTANT STRING_LITERAL SIZEOF
+%token LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
+
+/* %token TYPE_NAME */
+%token TYPEDEF EXTERN STATIC AUTO
+%token CHAR INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOID
+%token STRUCT UNION ENUM 
+
+%token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 /* reserved words end */
 
-/* reserved symbol begin */
-%token ASSIGN DELIMITER NEQ DOTDOT DOT LT LEQ GEQ GT EQ
-/* reserved symbol end */
-
-/* middle words begin */
-
-/* middle words end */
-
-%token <str> ID
+%token <str> IDENTIFIER
 %token <num> number
 /* %type <num> expr */
 %left '+''-'
@@ -35,102 +32,175 @@
 %right '^'
 
 %%
-program : PROGRAM ID DELIMITER const_decs type_decs var_decs function_decs execute DOT {printf("get all program\n");};
-const_decs  : 
-            | CONST eq_statements  {printf("get const_decs\n");}
-            ;
-eq_statements : IDs EQ expr DELIMITER 
-                | IDs EQ expr DELIMITER eq_statements
-                |
-;
+/* SSC无非是由一个个声明/定义构成的 */
+ssc
+        : external_declaration {}
+        | ssc external_declaration {}
+        ;
+
+/* 定义又分为函数定义和其他(变量)定义 */
+external_declaration 
+        : function_definition {std::cout<<"function"<<std::endl;}
+        | declaration {}
+        ;
+
+/* 指定类型 要声明列表 */ 
+declaration
+        : declaration_specifiers init_declarator_list ';' {}
+	    /* | declaration_specifiers ';' {} */
+	    ;
+
+declaration_specifiers
+        : type_qualifier
+        | type_specifier
+
+/* 可以同时声明多个变量, int a, b ,c; */
+init_declarator_list
+        : init_declarator
+        | init_declarator_list ',' init_declarator
+        ;
+/* 可以只声明，也可以同时初始化 */
+init_declarator
+        : declarator
+	    | declarator '=' initializer
+	    ;
+
+/* 对象可以是ID, 也可以是数组 */
+declarator
+        : IDENTIFIER
+        | declaration '[' expression ']'
+        | declaration '(' ')'
+        | declarator '(' parameter_list ')'
+        | declarator '(' identifier_list ')'
+        | declarator '(' ')'
+
+identifier_list
+        : IDENTIFIER
+        | identifier_list ',' IDENTIFIER
+
+parameter_list
+        : parameter_declaration
+        | parameter_list ',' parameter_declaration
+        ;
+
+parameter_declaration
+        : declaration_specifiers declarator
+        /* | declaration_specifiers */
+        ;        
+/* todo: 初始化数组{} */
+initializer
+	    : expression
+
+function_definition
+        : declaration_specifiers declarator declaration_list compound_statement {}
+        | declaration_specifiers declarator compound_statement {}
+        | declarator declaration_list compound_statement {}
+        | declarator compound_statement {}
+        ;
+
+compound_statement
+        : '{' '}'
+        | '{' statement_list '}'
+        | '{' declaration_list '}'
+        | '{' declaration_list statement_list '}'
+        ;
+
+declaration_list
+        : declaration
+        | declaration_list declaration
+
+statement_list
+        : statement
+        | statement_list statement
+        ;       
+/* 语句分为复合、表达式、选择、循环、跳转 */
+statement
+        : compound_statement
+        | expression_statement
+        | selection_statement
+        | iteration_statement
+        | jump_statement
+        ;
+
+expression_statement
+        : ';' {}
+        | expression ';' {}
+        ;
+
+selection_statement
+        : IF '(' expression ')' statement {}
+        | IF '(' expression ')' statement ELSE statement {}
+        | SWITCH '(' expression ')' statement {}
+        ;
+
+iteration_statement
+        : WHILE '(' expression ')' statement
+        | DO statement WHILE '(' expression ')' ';'
+        | FOR '(' expression_statement expression_statement ')' statement
+        | FOR '(' expression_statement expression_statement expression ')' statement
+        ;
+
+jump_statement
+        : GOTO IDENTIFIER ';'
+        | CONTINUE ';'
+        | BREAK ';'
+        | RETURN ';'
+        | RETURN expression ';'
+        ;
+
+expression
+        : primary_expression '+' primary_expression
+        | primary_expression '-' primary_expression
+        | primary_expression '*' primary_expression
+        | primary_expression '/' primary_expression
+        | primary_expression AND_OP primary_expression
+        | primary_expression OR_OP primary_expression
+        | unary_operator primary_expression
+        | primary_expression
+        | expression '[' expression ']'
+        | expression '(' ')'
+        | expression '(' argument_expression_list ')'
+        /* : assignment_expression {} */
+        /* | expression ',' assignment_expression */
+        ;
+argument_expression_list:
+        | expression
+        | argument_expression_list ',' expression
+/* assignment_expression
+        :   */
+
+/* 类型修饰符 */
+type_qualifier
+        : CONST
+        ;
+/* 类型标识符 */    
+type_specifier
+        : VOID
+        | CHAR
+        | INT
+        | FLOAT
+        | DOUBLE
+        /* | struct_or_union_specifier
+        | enum_specifier
+        | TYPE_NAME */
+        ;
+
+unary_operator
+        : '-'
+        | '~'
+        | '!'
+        ;
 
 
-
-IDs : ID  coID  {printf("get IDs\n");}
-;
-coID : | ',' ID coID;
-
-type_decs    : 
-            | TYPE
-
-;
-
-var_decs    : 
-            | VAR var_statements
-;
-
-var_statements : IDs ':' type DELIMITER 
-                | IDs ':' type DELIMITER var_statements
-                |
-
-type : standard_type | ARRAY'[' number DOTDOT number ']' OF standard_type ;
-standard_type : REAL | BOOLEAN | INTEGER  ;
-
-function_decs    : 
-                 | FUNCTION 
-;
-execute     : compoundstatment
-;
-
-compoundstatment: BEGIN END | BEGIN statementlist END 
-;
-
-
-statementlist           : statement DELIMITER
-                        |  statement DELIMITER statementlist
-                        ;
-
-statement               : variable ASSIGN expr
-                        /* | ProcedureStatement */
-                        | compoundstatment
-                        | IF expr THEN statement ELSE statement
-                        | IF expr THEN statementlist // test
-                        | WHILE expr DO statement
-                        |
-                        ;
-
-variable                : ID {}
-                        | ID '[' expr ']' {}
-                        ;
-statements      :  
-                | statement DELIMITER statements   
-;
-
-
-/* judge:   */
-
-expr    : expr '+' expr {}
-        | expr '-' expr {}
-        | expr '*' expr {}
-        | expr '/' expr {}
-        | expr '^' expr {}
-        | '-' expr %prec '*' {}
-        | '(' expr ')' {}
-        | number {}
-        | FALSE {}
-        | TRUE {}
-        | ID {}
-        |  LT expr
-        | expr GT expr
-        | expr EQ expr
-        | expr NEQ expr
-        | expr LEQ expr
-        | expr GEQ expr
-;
+primary_expression
+        : IDENTIFIER {}
+        | CONSTANT {;}
+        | STRING_LITERAL {}
+        | '(' expression ')' {}
+        ;
 %%
 
-/* int main(int argc, const char *argv[]) {
-    yyparse(); 
-    if(argc != 2) {
-        printf("Usage: %s <file>\n", argv[0]);
-        return 0;
-    }
-    yyin = fopen(argv[1], "r");
-    int result = yyparse();
-    printf("result: %d\n",result);
-    fclose(yyin);
-    return 0;
-} */
+
 
 
 void yyerror(char *s) {
