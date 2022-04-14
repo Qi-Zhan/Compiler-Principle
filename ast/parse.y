@@ -9,6 +9,8 @@
     extern char* yytext;
     extern int yylex(void);
     extern int yylineno;
+    int AST::order = 0;
+    AST head = AST("SSC");
 %}
 
 %union {int num; char str[63]; }
@@ -46,8 +48,8 @@ ssc
 
 /* 定义又分为函数定义和其他(变量)定义 */
 external_declaration 
-        : function_definition {std::cout<<"function"<<std::endl; AST("1232");}
-        | declaration {}
+        : function_definition {head.insert(AST("func"));}
+        | declaration {head.insert(AST("decl"));}
         ;
 
 /* 指定类型 要声明列表 */ 
@@ -175,6 +177,8 @@ type_specifier
         | INT
         | FLOAT
         | DOUBLE
+        | UNSIGNED
+        | SIGNED
         /* | struct_or_union_specifier
         | enum_specifier
         | TYPE_NAME */

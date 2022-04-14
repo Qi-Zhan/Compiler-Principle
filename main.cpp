@@ -1,7 +1,8 @@
-#include <iostream>
 #include <stdio.h>
+#include "ast/ast.h"
 extern int yyparse();
 extern FILE *yyin;
+extern AST head;
 int main(int argc, const char *argv[])
 {
     /* yyparse(); */
@@ -14,5 +15,6 @@ int main(int argc, const char *argv[])
     int result = yyparse();
     printf("result: %d\n", result);
     fclose(yyin);
+    head.print();
     return 0;
 }
