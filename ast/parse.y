@@ -2,6 +2,7 @@
     #include<stdio.h>
     #include<math.h>
     #include <iostream>
+    #include "ast.h"
     void yyerror(char *s);
     extern int yylineno;
     extern FILE* yyin;
@@ -45,7 +46,7 @@ ssc
 
 /* 定义又分为函数定义和其他(变量)定义 */
 external_declaration 
-        : function_definition {std::cout<<"function"<<std::endl;}
+        : function_definition {std::cout<<"function"<<std::endl; AST("1232");}
         | declaration {}
         ;
 

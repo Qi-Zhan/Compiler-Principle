@@ -1,10 +1,10 @@
-all : lex.yy.c parse.tab.c
+all : lex.yy.c parse.tab.cc
 
-parse.tab.c, parse.tab.h: parse.y
-	bison -d parse.y
+parse.tab.cc, parse.tab.h: parse.y
+	bison --defines=parse.tab.h -o parse.tab.cc parse.y
 
 lex.yy.c: scanner.l parse.tab.h
-	flex scanner.l
+	flex -o lex.yy.cc scanner.l 
 
 clean:
-	rm lex.yy.c parse.tab.c parse.tab.h
+	rm lex.yy.cc parse.tab.cc parse.tab.h

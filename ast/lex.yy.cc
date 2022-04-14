@@ -1,5 +1,6 @@
+#line 2 "lex.yy.cc"
 
-#line 3 "lex.yy.c"
+#line 4 "lex.yy.cc"
 
 #define  YY_INT_ALIGNED short int
 
@@ -598,9 +599,9 @@ char *yytext;
 #include <stdlib.h>
 void yyerror (char *s);
 
-#line 602 "lex.yy.c"
+#line 603 "lex.yy.cc"
 /* %option noyywrap */
-#line 604 "lex.yy.c"
+#line 605 "lex.yy.cc"
 
 #define INITIAL 0
 
@@ -820,7 +821,7 @@ YY_DECL
 #line 10 "scanner.l"
 
 
-#line 824 "lex.yy.c"
+#line 825 "lex.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1172,7 +1173,7 @@ YY_RULE_SETUP
 #line 71 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 1176 "lex.yy.c"
+#line 1177 "lex.yy.cc"
 
 	case YY_END_OF_BUFFER:
 		{
