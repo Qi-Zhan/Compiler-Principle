@@ -5,7 +5,6 @@ extern FILE *yyin;
 extern AST head;
 int main(int argc, const char *argv[])
 {
-    /* yyparse(); */
     if (argc != 2)
     {
         printf("Usage: %s <file>\n", argv[0]);
@@ -13,8 +12,11 @@ int main(int argc, const char *argv[])
     }
     yyin = fopen(argv[1], "r");
     int result = yyparse();
-    printf("result: %d\n", result);
+    if(result == 0){
+        printf("parse successfully!\n");
+    }
+    
     fclose(yyin);
-    head.print();
+    head.print(0);
     return 0;
 }

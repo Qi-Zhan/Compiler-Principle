@@ -1,28 +1,57 @@
 #include "ast.h"
 AST::AST(std::string name)
 {
-    this->name = name;
+    this->tokentype = name;
     this->id = AST::order++;
     this->parent = NULL;
-    // std::cout << "order==" << this->id << std::endl;
+    this->child = new std::vector<AST *>;
 }
 
 AST::~AST()
 {
 }
 
-void AST::print()
+void AST::print(int n)
 {
-    printf("-%s\n", this->name.c_str());
-    // std::cout << this->name << std::endl;
-    for (int i = 0; i < this->child.size(); i++)
+    for (int i = 0; i < n; i++)
     {
-        this->child[i].print();
+        printf("  ");
+    }
+    printf("-%s", this->tokentype.c_str());
+    if (this->tokentype == "VarDecl")
+    {
+        std::cout << " "<< this->dtype<<" "<<this->ID;
+    }
+    else if (this->tokentype == "BinaryOperator")
+    {
+        std::cout << " " << this->binaryop;
+    }
+    else if (this->tokentype == "Identifier")
+    {
+        std::cout << " " << this->ID;
+    }
+    else if (this->tokentype == "Constant")
+    {
+        printf(" %s %g",this->dtype.c_str(), this->dvaule);
+    }
+    printf("\n");
+    for (int i = 0; i < this->child->size(); i++)
+    {
+        this->child->at(i)->print(n+1);
     }
 }
 
-void AST::insert(AST node)
+void AST::insert(AST* node)
 {
-    this->child.push_back(node);
-    node.parent = this;
+    // node->print(3);
+    this->child->push_back(node);
+    node->parent = this;
+}
+
+void AST::copy_child(AST* node1, AST* node2){
+    for (int i = 0; i < node1->child->size(); i++)
+    {
+        /* code */
+    }
+    
 }

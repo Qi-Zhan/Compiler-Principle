@@ -10,13 +10,13 @@
     extern int yylex(void);
     extern int yylineno;
     int AST::order = 0;
-    AST head = AST("SSC");
+    AST head = AST("translation unit");
 %}
 
-%union {int num; char str[63]; }
+%union {float numf; int numi ; char str[63]; AST *node; }
 %start ssc
 /* reserved words begin */
-%token CONSTANT STRING_LITERAL SIZEOF
+%token STRING_LITERAL SIZEOF
 %token LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
 
 /* %token TYPE_NAME */
@@ -28,8 +28,14 @@
 /* reserved words end */
 
 %token <str> IDENTIFIER
-%token <num> number
+%token <numf> CONSTANTf
+%token <numi> CONSTANTi
 /* %type <num> expr */
+
+/* immediate words type */
+%type<node> external_declaration declaration function_definition declaration_specifiers type_specifier type_qualifier
+%type<node> expression
+/* immediate words type */
 %left ','
 %left '='
 %left OR_OP
@@ -42,26 +48,29 @@
 %%
 /* SSC无非是由一个个声明/定义构成的 */
 ssc
-        : external_declaration {}
-        | ssc external_declaration {}
+        : external_declaration {head.insert($1);}
+        | ssc external_declaration {head.insert($2);}
         ;
 
 /* 定义又分为函数定义和其他(变量)定义 */
 external_declaration 
-        : function_definition {head.insert(AST("func"));}
-        | declaration {head.insert(AST("decl"));}
+        : function_definition {$$ = new AST("FunctionDecl"); }
+        | declaration {
+                $$ =new AST("VarDecl");$$->dtype = $1->dtype; 
+                $$->ID = $1->ID;$$->child = $1->child;
+                // std::cout<<$$->child->size();  
+                }
         ;
 
 /* 指定类型 要声明列表 */ 
 declaration
-        : declaration_specifiers identifier_list ';' {}
-        | declaration_specifiers identifier_list '=' expression ';' {}
-	    /* | declaration_specifiers ';' {} */
+        : declaration_specifiers IDENTIFIER ';' {$$ = new AST("test"); $$->dtype = $1->tokentype;$$->ID = $2; }
+        | declaration_specifiers IDENTIFIER '=' expression ';' {$$ = new AST("test"); $$->dtype = $1->tokentype;$$->ID = $2;$$->insert($4);}
         ;
 
 declaration_specifiers
-        : type_qualifier type_specifier
-        | type_specifier
+        : type_qualifier type_specifier {}
+        | type_specifier {$$ = $1;}
         ;
 /* 可以同时声明多个变量, int a, b ,c; */
 
@@ -92,7 +101,6 @@ compound_statement
         | '{' declaration_list '}'
         | '{' declaration_list statement_list '}'
         ;
-
 declaration_list
         : declaration
         | declaration_list  declaration
@@ -135,7 +143,7 @@ iteration_statement
         ;
 
 jump_statement
-        : GOTO IDENTIFIER ';'
+        : GOTO IDENTIFIER ';' 
         | CONTINUE ';'
         | BREAK ';'
         | RETURN ';'
@@ -143,23 +151,24 @@ jump_statement
         ;
 
 expression
-        : expression '+' expression 
-        | expression '-' expression
-        | expression '*' expression
-        | expression '/' expression
-        | expression AND_OP expression
-        | expression OR_OP expression
-        | expression LE_OP expression       
-        | expression NE_OP expression
-        | expression GE_OP expression
-        | expression EQ_OP expression             
-        | expression '=' expression
+        : expression '+' expression {$$ = new AST("BinaryOperator");$$->binaryop="+"; $$->insert($1);$$->insert($3);}
+        | expression '-' expression {$$ = new AST("BinaryOperator");$$->binaryop="-"; $$->insert($1);$$->insert($3);}
+        | expression '*' expression {$$ = new AST("BinaryOperator");$$->binaryop="*"; $$->insert($1);$$->insert($3);}
+        | expression '/' expression {$$ = new AST("BinaryOperator");$$->binaryop="/"; $$->insert($1);$$->insert($3);}
+        | expression AND_OP expression {$$ = new AST("BinaryOperator");$$->binaryop="&&"; $$->insert($1);$$->insert($3);}
+        | expression OR_OP expression {$$ = new AST("BinaryOperator");$$->binaryop="||"; $$->insert($1);$$->insert($3);}
+        | expression LE_OP expression  {$$ = new AST("BinaryOperator");$$->binaryop="<="; $$->insert($1);$$->insert($3);}     
+        | expression NE_OP expression {$$ = new AST("BinaryOperator");$$->binaryop="!="; $$->insert($1);$$->insert($3);}
+        | expression GE_OP expression {$$ = new AST("BinaryOperator");$$->binaryop=">="; $$->insert($1);$$->insert($3);}
+        | expression EQ_OP expression   {$$ = new AST("BinaryOperator"); $$->binaryop="==";$$->insert($1);$$->insert($3);}           
+        | expression '=' expression {$$ = new AST("BinaryOperator");$$->binaryop="+"; $$->insert($1);$$->insert($3);}
         | IDENTIFIER '[' expression ']' {}
         | IDENTIFIER '(' expression_list ')' {}
-        | IDENTIFIER {} 
-        | CONSTANT {;}
+        | IDENTIFIER {$$ = new AST("Identifier"); $$->ID = $1;} 
+        | CONSTANTf {$$ = new AST("Constant"); $$->dvaule = $1; $$->dtype = "float"; }
+        | CONSTANTi {$$ = new AST("Constant"); $$->dvaule = $1; $$->dtype = "int";}
         | STRING_LITERAL {}
-        | '(' expression ')' {}
+        | '(' expression ')' {$$ = new AST("ParenExpr"); $$->insert($2);}
         ;
         /*  | unary_operator expression */
 
@@ -168,17 +177,17 @@ expression
 
 /* 类型修饰符 */
 type_qualifier
-        : CONST
+        : CONST {$$ = new AST("const");}
         ;
 /* 类型标识符 */    
 type_specifier
-        : VOID
-        | CHAR
-        | INT
-        | FLOAT
-        | DOUBLE
-        | UNSIGNED
-        | SIGNED
+        : VOID {$$ = new AST("void");}
+        | CHAR {$$ = new AST("char");}
+        | INT {$$ = new AST("int");}
+        | FLOAT {$$ = new AST("float");}
+        | DOUBLE {$$ = new AST("double");}
+        | UNSIGNED {$$ = new AST("unsigned");}
+        | SIGNED  {$$ = new AST("signed");}
         /* | struct_or_union_specifier
         | enum_specifier
         | TYPE_NAME */
