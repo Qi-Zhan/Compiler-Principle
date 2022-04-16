@@ -102,7 +102,7 @@ extern int yydebug;
 union YYSTYPE
 {
 #line 16 "parse.y"
-float numf; int numi ; char str[63]; AST *node; 
+float numf; int numi ; char* str; AST *node; 
 
 #line 108 "parse.tab.h"
 

@@ -3,7 +3,7 @@
     #include<math.h>
     #include <iostream>
     #include "ast.h"
-    void yyerror(char *s);
+    void yyerror(const char *s);
     extern int yylineno;
     extern FILE* yyin;
     extern char* yytext;
@@ -13,7 +13,7 @@
     AST head = AST("translation unit");
 %}
 
-%union {float numf; int numi ; char str[63]; AST *node; }
+%union {float numf; int numi ; char* str; AST *node; }
 %start ssc
 /* reserved words begin */
 %token STRING_LITERAL SIZEOF
@@ -34,7 +34,9 @@
 
 /* immediate words type */
 %type<node> external_declaration declaration function_definition declaration_specifiers type_specifier type_qualifier
-%type<node> expression
+%type<node> expression parameter_list compound_statement jump_statement selection_statement 
+%type<node> iteration_statement statement statement_list expression_statement declaration_list
+%type<node> expression_list
 /* immediate words type */
 %left ','
 %left '='
@@ -54,18 +56,22 @@ ssc
 
 /* 定义又分为函数定义和其他(变量)定义 */
 external_declaration 
-        : function_definition {$$ = new AST("FunctionDecl"); }
+        : function_definition {
+                $$ = new AST("FunctionDecl"); 
+                $$->child = $1->child; // para和compound statement 孩子
+                $$->ID = $1->ID; $$->dtype = $1->dtype; // 函数名 返回类型
+                }
         | declaration {
                 $$ =new AST("VarDecl");$$->dtype = $1->dtype; 
-                $$->ID = $1->ID;$$->child = $1->child;
+                $$->ID = $1->ID;$$->child = $1->child; // expr 孩子
                 // std::cout<<$$->child->size();  
                 }
         ;
 
 /* 指定类型 要声明列表 */ 
 declaration
-        : declaration_specifiers IDENTIFIER ';' {$$ = new AST("test"); $$->dtype = $1->tokentype;$$->ID = $2; }
-        | declaration_specifiers IDENTIFIER '=' expression ';' {$$ = new AST("test"); $$->dtype = $1->tokentype;$$->ID = $2;$$->insert($4);}
+        : declaration_specifiers IDENTIFIER ';' {$$ = new AST("VarDecl"); $$->dtype = $1->tokentype;$$->ID = $2; }
+        | declaration_specifiers IDENTIFIER '=' expression ';' {$$ = new AST("VarDecl"); $$->dtype = $1->tokentype;$$->ID = $2;$$->insert($4);}
         ;
 
 declaration_specifiers
@@ -85,69 +91,75 @@ identifier_list
         ;
 
 parameter_list
-        : declaration_specifiers IDENTIFIER
-        | parameter_list ',' declaration_specifiers IDENTIFIER
+        : declaration_specifiers IDENTIFIER {$$ = new AST("ParmVarDecl"); AST* temp = new AST("ParmVarDecl");
+                temp->ID = $2; temp->dtype = $1->tokentype; $$->insert(temp);}
+        | parameter_list ',' declaration_specifiers IDENTIFIER {$$ = $1; AST* temp = new AST("ParmVarDecl");
+                temp->ID = $4; temp->dtype = $3->tokentype; $$->insert(temp);}
         ;        
 /* todo: 初始化数组{} */
 
 function_definition
-        : declaration_specifiers IDENTIFIER '(' parameter_list ')' compound_statement {}
-        | declaration_specifiers IDENTIFIER '(' ')' compound_statement {}
+        : declaration_specifiers IDENTIFIER '(' parameter_list ')' compound_statement {
+                $$ = new AST("test"); $$->ID = $2; $$->dtype=$1->tokentype; // 同下
+                $$->child = $4->child; $$->insert($6); 
+                }
+        | declaration_specifiers IDENTIFIER '(' ')' compound_statement {$$ = new AST("test"); $$->ID = $2; $$->dtype=$1->tokentype;$$->insert($5);}
         ;
 
 compound_statement
-        : '{' '}'
-        | '{' statement_list '}'
-        | '{' declaration_list '}'
-        | '{' declaration_list statement_list '}'
+        : '{' '}' {$$ = new AST("CompoundStmt"); }
+        | '{' statement_list '}' {$$ = new AST("CompoundStmt"); $$->child = $2->child; }
+        | '{' declaration_list '}' {$$ = new AST("CompoundStmt"); $$->child = $2->child;}
+        | '{' declaration_list statement_list '}' {$$ = new AST("CompoundStmt"); $$->child = $2->child;$$->copy_child($3);}
         ;
+
 declaration_list
-        : declaration
-        | declaration_list  declaration
+        : declaration {$$ = new AST("test"); $$->insert($1);}
+        | declaration_list  declaration {$$ = $1; $$->insert($2);}
         ;
 
 statement_list
-        : statement
-        | statement_list statement
+        : statement {$$ = new AST("test"); $$->insert($1);}
+        | statement_list statement {$$ = $1; $$->insert($2);}
         ;       
 /* 语句分为复合、表达式、选择、循环、跳转 */
 statement
-        : compound_statement
-        | expression_statement
-        | selection_statement
-        | iteration_statement
-        | jump_statement
-        ;
+        : compound_statement {$$ = $1; }
+        | expression_statement {$$ = $1; }
+        | selection_statement {$$ = $1; }
+        | iteration_statement {$$ = $1; }
+        | jump_statement {$$ = $1; }
+        ; 
 
 expression_list
-        : expression_list ',' expression
-        | expression
+        : expression_list ',' expression {$$ = $1; $$->insert($3);}
+        | expression {$$ = new AST("test"); $$->insert($1);}
         ;
 
 expression_statement
-        : ';' {}
-        | expression ';' {}
+        : ';' {$$ = new AST("NullStmt");}
+        | expression ';' {$$ = $1;}
         ;
 
 selection_statement
-        : IF '(' expression ')' statement ELSE statement {}
-        | IF '(' expression ')' statement {}
+        : IF '(' expression ')' statement ELSE statement {$$ = new AST("IfStmt");$$->insert($3);$$->insert($5);$$->insert($7);}
+        | IF '(' expression ')' statement {$$ = new AST("IfStmt");}
         | SWITCH '(' expression ')' statement {}
         ;
 
 iteration_statement
-        : WHILE '(' expression ')' statement
-        | DO statement WHILE '(' expression ')' ';'
-        | FOR '(' expression_statement expression_statement ')' statement
-        | FOR '(' expression_statement expression_statement expression ')' statement
+        : WHILE '(' expression ')' statement {$$ = new AST("WhileStmt"); $$->insert($3);$$->insert($5);}
+        /* | DO statement WHILE '(' expression ')' ';' {} */
+        | FOR '(' expression_statement expression_statement ')' statement {$$ = new AST("ForStmt"); $$->insert($3);$$->insert($4);$$->insert($6);}
+        | FOR '(' expression_statement expression_statement expression ')' statement {$$ = new AST("ForStmt");$$->insert($3);$$->insert($4);$$->insert($5);$$->insert($7);}
         ;
 
 jump_statement
-        : GOTO IDENTIFIER ';' 
-        | CONTINUE ';'
-        | BREAK ';'
-        | RETURN ';'
-        | RETURN expression ';'
+        : GOTO IDENTIFIER ';' {} 
+        | CONTINUE ';' {$$ =  new AST("ContinueStmt");}
+        | BREAK ';' {$$ = new AST("BreakStmt");}
+        | RETURN ';' {$$ = new AST("ReturnStmt");}
+        | RETURN expression ';' {$$ = new AST("ReturnStmt"); $$->insert($2); }
         ;
 
 expression
@@ -160,13 +172,15 @@ expression
         | expression LE_OP expression  {$$ = new AST("BinaryOperator");$$->binaryop="<="; $$->insert($1);$$->insert($3);}     
         | expression NE_OP expression {$$ = new AST("BinaryOperator");$$->binaryop="!="; $$->insert($1);$$->insert($3);}
         | expression GE_OP expression {$$ = new AST("BinaryOperator");$$->binaryop=">="; $$->insert($1);$$->insert($3);}
-        | expression EQ_OP expression   {$$ = new AST("BinaryOperator"); $$->binaryop="==";$$->insert($1);$$->insert($3);}           
-        | expression '=' expression {$$ = new AST("BinaryOperator");$$->binaryop="+"; $$->insert($1);$$->insert($3);}
+        | expression EQ_OP expression   {$$ = new AST("BinaryOperator"); $$->binaryop="==";$$->insert($1);$$->insert($3);}    
+        | expression '<' expression   {$$ = new AST("BinaryOperator"); $$->binaryop="<";$$->insert($1);$$->insert($3);}  
+        | expression '>' expression   {$$ = new AST("BinaryOperator"); $$->binaryop=">";$$->insert($1);$$->insert($3);}         
+        | expression '=' expression {$$ = new AST("BinaryOperator");$$->binaryop="="; $$->insert($1);$$->insert($3);}
         | IDENTIFIER '[' expression ']' {}
-        | IDENTIFIER '(' expression_list ')' {}
-        | IDENTIFIER {$$ = new AST("Identifier"); $$->ID = $1;} 
-        | CONSTANTf {$$ = new AST("Constant"); $$->dvaule = $1; $$->dtype = "float"; }
-        | CONSTANTi {$$ = new AST("Constant"); $$->dvaule = $1; $$->dtype = "int";}
+        | IDENTIFIER '(' expression_list ')' {$$ = new AST("CallExpr"); $$->ID = $1; $$->child = $3->child;}
+        | IDENTIFIER {$$ = new AST("Identifier"); $$->ID = $1; } 
+        | CONSTANTf {$$ = new AST("Constant"); $$->dvalue = $1; $$->dtype = "float"; }
+        | CONSTANTi {$$ = new AST("Constant"); $$->dvalue = $1; $$->dtype = "int";}
         | STRING_LITERAL {}
         | '(' expression ')' {$$ = new AST("ParenExpr"); $$->insert($2);}
         ;
@@ -188,6 +202,7 @@ type_specifier
         | DOUBLE {$$ = new AST("double");}
         | UNSIGNED {$$ = new AST("unsigned");}
         | SIGNED  {$$ = new AST("signed");}
+        | AUTO {$$ = new AST("auto");}
         /* | struct_or_union_specifier
         | enum_specifier
         | TYPE_NAME */
@@ -204,6 +219,6 @@ unary_operator
 
 
 
-void yyerror(char *s) {
+void yyerror(const char *s) {
     fprintf(stderr, "line %d: %s at %s\n",yylineno, s,yytext);
 }

@@ -13,12 +13,13 @@ AST::~AST()
 
 void AST::print(int n)
 {
+    // printf("|");
     for (int i = 0; i < n; i++)
     {
         printf("  ");
     }
     printf("-%s", this->tokentype.c_str());
-    if (this->tokentype == "VarDecl")
+    if (this->tokentype == "VarDecl" || this->tokentype == "ParmVarDecl")
     {
         std::cout << " "<< this->dtype<<" "<<this->ID;
     }
@@ -32,7 +33,15 @@ void AST::print(int n)
     }
     else if (this->tokentype == "Constant")
     {
-        printf(" %s %g",this->dtype.c_str(), this->dvaule);
+        printf(" %s %g",this->dtype.c_str(), this->dvalue);
+    }
+    else if (this->tokentype == "FunctionDecl")
+    {
+        printf(" %s return %s",this->ID.c_str(), this->dtype.c_str());
+    }
+    else if (this->tokentype == "CallExpr")
+    {
+        printf(" %s", this->ID.c_str());
     }
     printf("\n");
     for (int i = 0; i < this->child->size(); i++)
@@ -48,10 +57,9 @@ void AST::insert(AST* node)
     node->parent = this;
 }
 
-void AST::copy_child(AST* node1, AST* node2){
-    for (int i = 0; i < node1->child->size(); i++)
+void AST::copy_child(AST* node){
+    for (int i = 0; i < node->child->size(); i++)
     {
-        /* code */
+        this->child->push_back(node->child->at(i));
     }
-    
 }

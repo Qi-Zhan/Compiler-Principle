@@ -2,7 +2,7 @@
 #include "ast.h"
 #include "parse.tab.h"
 #include <stdlib.h>
-void yyerror (char *s);
+void yyerror (const char *s);
 
 %}
 /* %option noyywrap */
@@ -63,7 +63,10 @@ void yyerror (char *s);
 "~"                     {return yytext[0];}
 [0-9]+                 {yylval.numi = atoi(yytext); return CONSTANTi;}
 [0-9]+\.[0-9]+          {yylval.numf = atof(yytext); return CONSTANTf;}
-[a-zA-Z][a-zA-Z0-9]*     {  for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; return IDENTIFIER;}
+[a-zA-Z][a-zA-Z0-9]*     {  //for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; 
+                            yylval.str = new char[strlen(yytext)]; // 不然会出大问题
+                            strcpy(yylval.str, yytext); // yylval.str = yytext;
+                            return IDENTIFIER;}
 <<EOF>>                  { yyterminate();}
 \n                   {}
 " "                 {}

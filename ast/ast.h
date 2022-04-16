@@ -13,9 +13,10 @@ private:
 public:
     std::string tokentype; // 所有token都有的，标识这个token类别
     std::string dtype; // VarDecl  Function return
+    // std::string paratype; //参数类型
     std::string ID;
     std::string binaryop;
-    float dvaule;
+    float dvalue;
     int id;
     std::vector<AST*> *child;
     AST* parent;
@@ -23,7 +24,7 @@ public:
     ~AST();
     void insert(AST* node);
     void print(int n);
-    void copy_child(AST *node1, AST *node2);
+    void copy_child(AST *node);
 };
 
 #endif

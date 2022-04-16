@@ -598,7 +598,7 @@ char *yytext;
 #include "ast.h"
 #include "parse.tab.h"
 #include <stdlib.h>
-void yyerror (char *s);
+void yyerror (const char *s);
 
 #line 604 "lex.yy.cc"
 /* %option noyywrap */
@@ -1147,34 +1147,37 @@ YY_RULE_SETUP
 case 52:
 YY_RULE_SETUP
 #line 66 "scanner.l"
-{  for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; return IDENTIFIER;}
+{  //for(int i=0;i<yyleng;i++) yylval.str[i] = yytext[i]; 
+                            yylval.str = new char[strlen(yytext)]; // 不然会出大问题
+                            strcpy(yylval.str, yytext); // yylval.str = yytext;
+                            return IDENTIFIER;}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 67 "scanner.l"
+#line 70 "scanner.l"
 { yyterminate();}
 	YY_BREAK
 case 53:
 /* rule 53 can match eol */
 YY_RULE_SETUP
-#line 68 "scanner.l"
+#line 71 "scanner.l"
 {}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 69 "scanner.l"
+#line 72 "scanner.l"
 {}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 70 "scanner.l"
+#line 73 "scanner.l"
 {ECHO; yyerror (" unexpected character");}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 72 "scanner.l"
+#line 75 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 1178 "lex.yy.cc"
+#line 1181 "lex.yy.cc"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2189,7 +2192,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 72 "scanner.l"
+#line 75 "scanner.l"
 
 int yywrap (void){
     return 1;
