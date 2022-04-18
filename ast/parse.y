@@ -10,7 +10,7 @@
     extern int yylex(void);
     extern int yylineno;
     int AST::order = 0;
-    AST head = AST("translation unit");
+    AST *head =new AST("translation unit");
 %}
 
 %union {float numf; int numi ; char* str; AST *node; }
@@ -50,8 +50,8 @@
 %%
 /* SSC无非是由一个个声明/定义构成的 */
 ssc
-        : external_declaration {head.insert($1);}
-        | ssc external_declaration {head.insert($2);}
+        : external_declaration {head->insert($1);}
+        | ssc external_declaration {head->insert($2);}
         ;
 
 /* 定义又分为函数定义和其他(变量)定义 */

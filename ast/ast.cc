@@ -61,5 +61,6 @@ void AST::copy_child(AST* node){
     for (int i = 0; i < node->child->size(); i++)
     {
         this->child->push_back(node->child->at(i));
+        node->child->at(i)->parent = this;
     }
 }

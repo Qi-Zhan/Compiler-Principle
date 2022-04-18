@@ -80,7 +80,7 @@
     extern int yylex(void);
     extern int yylineno;
     int AST::order = 0;
-    AST head = AST("translation unit");
+    AST *head =new AST("translation unit");
 
 #line 86 "parse.tab.cc"
 
@@ -1318,13 +1318,13 @@ yyreduce:
     {
   case 2: /* ssc: external_declaration  */
 #line 53 "parse.y"
-                               {head.insert((yyvsp[0].node));}
+                               {head->insert((yyvsp[0].node));}
 #line 1323 "parse.tab.cc"
     break;
 
   case 3: /* ssc: ssc external_declaration  */
 #line 54 "parse.y"
-                                   {head.insert((yyvsp[0].node));}
+                                   {head->insert((yyvsp[0].node));}
 #line 1329 "parse.tab.cc"
     break;
 
