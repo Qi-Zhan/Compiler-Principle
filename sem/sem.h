@@ -4,9 +4,11 @@
 #include "../ast/ast.h"
 class symbolTable
 {
-
 public:
+    AST *head;
+
     symbolTable(AST* node);
+
     ~symbolTable();
 };
 

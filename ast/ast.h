@@ -25,6 +25,7 @@ public:
     void insert(AST* node);
     void print(int n);
     void copy_child(AST *node);
+    void reparent();
 };
 
 #endif

@@ -64,3 +64,11 @@ void AST::copy_child(AST* node){
         node->child->at(i)->parent = this;
     }
 }
+
+void AST::reparent(){
+    for (int i = 0; i < this->child->size(); i++)
+    {
+        this->child->at(i)->parent = this;
+        this->child->at(i)->reparent();
+    }
+}

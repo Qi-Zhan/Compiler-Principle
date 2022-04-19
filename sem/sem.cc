@@ -2,7 +2,7 @@
 
 symbolTable::symbolTable(AST* node)
 {
-    
+    this->head = node;
 }
 
 symbolTable::~symbolTable()
