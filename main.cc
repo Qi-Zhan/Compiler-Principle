@@ -25,10 +25,11 @@ int main(int argc, const char *argv[])
     auto SymbolTable = new symbolTable(head);
 
     printf("Pass Semantic Checking!\n");
-    printf("Generating Code...\n");
+    printf("Generating IR...\n");
     auto CodeGen = new codeGen();
     CodeGen->generate(head);
     CodeGen->print();
+    printf("Generating Obejective Code...\n");
     CodeGen->generate_o();
     return 0;
 }

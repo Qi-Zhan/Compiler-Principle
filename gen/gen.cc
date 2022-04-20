@@ -8,7 +8,6 @@ static std::map<std::string, Value *> NamedValues;
 static void InitializeModule()
 {
     // Open a new context and module.
-    // TheContext = std::make_unique<LLVMContext>(new LLVMContext);
     TheContext = std::make_unique<LLVMContext>();
     TheModule = std::make_unique<Module>("my cool ssc", *TheContext);
 
@@ -16,15 +15,14 @@ static void InitializeModule()
     Builder = std::make_unique<IRBuilder<>>(*TheContext);
 }
 
-codeGen::codeGen()
-{
+codeGen::codeGen(){
     InitializeModule();
 }
 Value *codeGen::generate(AST *node){
     if (node->tokentype == "translation unit"){ // test first
         for (int i = 0; i < node->child->size(); i++)
         {
-            return codeGen::generate(node->child->at(i));
+            codeGen::generate(node->child->at(i));
         }
         return nullptr;
     }
@@ -58,7 +56,7 @@ Value *codeGen::generate(AST *node){
         if (node->binaryop=="+")
         {
             return Builder->CreateFAdd(L, R, "addtmp");
-        }else if (node->binaryop == "-") //a lot todo
+        }else if (node->binaryop == "-") 
         {
             return Builder->CreateFSub(L, R, "subtmp");
         }
@@ -69,6 +67,29 @@ Value *codeGen::generate(AST *node){
         else if (node->binaryop == "/") // a lot todo
         {
             return Builder->CreateFDiv(L, R, "subtmp");
+        }else if (node->binaryop == "<")
+        {
+            return Builder->CreateFCmpULT(L, R, "complt");
+        }
+        else if (node->binaryop == ">")
+        {
+            return Builder->CreateFCmpUGT(L, R, "compgt");
+        }
+        else if (node->binaryop == "==")
+        {
+            return Builder->CreateFCmpOEQ(L, R, "compeq");
+        }
+        else if (node->binaryop == ">=")
+        {
+            return Builder->CreateFCmpUGE(L, R, "compge");
+        }
+        else if (node->binaryop == "<=")
+        {
+            return Builder->CreateFCmpULE(L, R, "comple");
+        }
+        else if (node->binaryop == "!=")
+        {
+            return Builder->CreateFCmpUNE(L, R, "compne");
         }
     }
     else if (node->tokentype == "CallExpr") // 调用函数
@@ -105,6 +126,7 @@ Value *codeGen::generate(AST *node){
         std::vector<Type *> Doubles(para,Type::getDoubleTy(*TheContext));
         FunctionType *FT =
             FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
+            // Type::getInt32Ty
         Function *F =
             Function::Create(FT, Function::ExternalLinkage, node->ID, TheModule.get());
         unsigned Idx = 0;
@@ -150,6 +172,56 @@ Value *codeGen::generate(AST *node){
     {
         return codeGen::generate(node->child->at(0));
     }
+    else if (node->tokentype == "IfStmt")
+    {
+        Value* CondV =  codeGen::generate(node->child->at(0));
+        if (!CondV)
+            return nullptr;
+        // Convert condition to a bool by comparing non-equal to 0.
+        // APInt i = APInt(1, 0);
+        // CondV = Builder->CreateFCmpONE(CondV, ConstantInt::get(*TheContext, APInt(i)), "ifcond");
+        Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        // Create blocks for the then and else cases.  Insert the 'then' block at the
+        // end of the function.
+        BasicBlock *ThenBB = BasicBlock::Create(*TheContext, "then", TheFunction);
+        BasicBlock *ElseBB = BasicBlock::Create(*TheContext, "else");
+        BasicBlock *MergeBB = BasicBlock::Create(*TheContext, "ifcont");
+        Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+        // Emit then value.
+        Builder->SetInsertPoint(ThenBB);
+        Value *ThenV = codeGen::generate(node->child->at(1));
+        if (!ThenV)
+            return nullptr;
+        Builder->CreateBr(MergeBB);
+        // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+        ThenBB = Builder->GetInsertBlock();
+
+        // Emit else block.
+        TheFunction->getBasicBlockList().push_back(ElseBB);
+        Builder->SetInsertPoint(ElseBB);
+
+        Value *ElseV = nullptr;
+        if (node->child->size() == 3) // no else
+        {
+            // printf("elseelselselse\n");
+            ElseV = codeGen::generate(node->child->at(2));
+        }
+        if (!ElseV)
+            return nullptr;
+
+        Builder->CreateBr(MergeBB);
+        // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
+        ElseBB = Builder->GetInsertBlock();
+
+        // Emit merge block.
+        TheFunction->getBasicBlockList().push_back(MergeBB);
+        Builder->SetInsertPoint(MergeBB);
+        PHINode *PN = Builder->CreatePHI(Type::getDoubleTy(*TheContext), 2, "iftmp");
+
+        PN->addIncoming(ThenV, ThenBB);
+        PN->addIncoming(ElseV, ElseBB);
+        return PN;
+    }
 
     return nullptr;
 }
@@ -158,7 +230,7 @@ codeGen::~codeGen()
 }
 
 void codeGen::print(){
-    printf("print successfully!\n");
+    // printf("print successfully!\n");
     TheModule->print(errs(), nullptr);
 }
 
@@ -216,5 +288,6 @@ int codeGen::generate_o(){
     pass.run(*TheModule);
     dest.flush();
 
-    outs() << "Wrote " << Filename << "\n";
+    outs() << "Generate " << Filename << " successfully!\n";
+    return 0;
 }

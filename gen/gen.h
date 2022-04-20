@@ -16,8 +16,8 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
-// #include "llvm/MC/TargetRegistry.h"
-#include "llvm/Support/TargetRegistry.h"
+// #include "llvm/MC/TargetRegistry.h"  // llvm 15
+#include "llvm/Support/TargetRegistry.h" // llvm 12
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/TargetSelect.h"
