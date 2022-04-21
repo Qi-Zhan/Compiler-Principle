@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
     auto CodeGen = new codeGen();
     CodeGen->generate(head);
     CodeGen->print();
-    printf("Generating Obejective Code...\n");
+    printf("Generating Objective Code...\n");
     CodeGen->generate_o();
     return 0;
 }

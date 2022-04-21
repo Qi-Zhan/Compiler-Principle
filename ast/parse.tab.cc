@@ -1667,7 +1667,7 @@ yyreduce:
 
   case 58: /* expression: CONSTANTf  */
 #line 182 "parse.y"
-                    {(yyval.node) = new AST("Constant"); (yyval.node)->dvalue = (yyvsp[0].numf); (yyval.node)->dtype = "float"; }
+                    {(yyval.node) = new AST("Constant"); (yyval.node)->dvalue = (yyvsp[0].numf); (yyval.node)->dtype = "double"; }
 #line 1672 "parse.tab.cc"
     break;
 

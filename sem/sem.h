@@ -8,7 +8,7 @@ public:
     AST *head;
 
     symbolTable(AST* node);
-
+    void generate_symbolTable();
     ~symbolTable();
 };
 

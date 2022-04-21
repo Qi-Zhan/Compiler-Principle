@@ -14,6 +14,69 @@ static void InitializeModule()
     // // Create a new builder for the module.
     Builder = std::make_unique<IRBuilder<>>(*TheContext);
 }
+Value *codeGen::binaryop(AST *node){
+    Value *L = codeGen::generate(node->child->at(0));
+    Value *R = codeGen::generate(node->child->at(1));
+    std::string type0 = node->child->at(0)->dtype;
+    std::string type1 = node->child->at(1)->dtype;
+    // bool allint = (type0 == "int") && (type1 == "int");
+    bool allint = (node->dtype == "int");
+    // std::cout << type0 << type1 << std::endl;
+    // allint = true; //test
+    if (!L || !R)
+        return nullptr;
+    if (node->binaryop == "+")
+    {
+        if (allint)
+            return Builder->CreateAdd(L, R, "addtmp");
+        else
+        return Builder->CreateFAdd(L, R, "addtmp");
+    }
+    else if (node->binaryop == "-")
+    {
+        return Builder->CreateFSub(L, R, "subtmp");
+    }
+    else if (node->binaryop == "*") // a lot todo
+    {
+        if (allint)
+            return Builder->CreateMul(L, R, "multmp");
+        else
+            return Builder->CreateFMul(L, R, "multmp");
+    }
+    else if (node->binaryop == "/") // a lot todo
+    {
+        return Builder->CreateFDiv(L, R, "subtmp");
+    }
+    else if (node->binaryop == "<")
+    {
+        return Builder->CreateFCmpULT(L, R, "complt");
+    }
+    else if (node->binaryop == ">")
+    {
+        return Builder->CreateFCmpUGT(L, R, "compgt");
+    }
+    else if (node->binaryop == "==")
+    {
+        // return Builder->CreateFCmp
+        if (allint)
+            return Builder->CreateICmpEQ(L, R, "compeq");
+        else
+            return Builder->CreateFCmpOEQ(L, R, "compeq");
+    }
+    else if (node->binaryop == ">=")
+    {
+        return Builder->CreateFCmpUGE(L, R, "compge");
+    }
+    else if (node->binaryop == "<=")
+    {
+        return Builder->CreateFCmpULE(L, R, "comple");
+    }
+    else if (node->binaryop == "!=")
+    {
+        return Builder->CreateFCmpUNE(L, R, "compne");
+    }
+    return nullptr;
+}
 
 codeGen::codeGen(){
     InitializeModule();
@@ -30,7 +93,7 @@ Value *codeGen::generate(AST *node){
     {
         if (node->dtype == "int")
         {
-            APInt i = APInt(32, (int)node->dvalue);
+            APInt i = APInt(32, (int)node->dvalue, true);
             // printf("get int\n");
             return ConstantInt::get(*TheContext, APInt(i));
         }
@@ -39,6 +102,7 @@ Value *codeGen::generate(AST *node){
             // printf("get float\n");
             return ConstantFP::get(*TheContext, APFloat(node->dvalue));
         }else if(node->dtype == "double"){
+            
             return ConstantFP::get(*TheContext, APFloat(node->dvalue));
         }
     }
@@ -49,59 +113,17 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "BinaryOperator")
     {
-        Value *L = codeGen::generate(node->child->at(0));
-        Value *R = codeGen::generate(node->child->at(1));
-        if (!L || !R)
-            return nullptr;
-        if (node->binaryop=="+")
-        {
-            return Builder->CreateFAdd(L, R, "addtmp");
-        }else if (node->binaryop == "-") 
-        {
-            return Builder->CreateFSub(L, R, "subtmp");
-        }
-        else if (node->binaryop == "*") // a lot todo
-        {
-            return Builder->CreateFMul(L, R, "subtmp");
-        }
-        else if (node->binaryop == "/") // a lot todo
-        {
-            return Builder->CreateFDiv(L, R, "subtmp");
-        }else if (node->binaryop == "<")
-        {
-            return Builder->CreateFCmpULT(L, R, "complt");
-        }
-        else if (node->binaryop == ">")
-        {
-            return Builder->CreateFCmpUGT(L, R, "compgt");
-        }
-        else if (node->binaryop == "==")
-        {
-            return Builder->CreateFCmpOEQ(L, R, "compeq");
-        }
-        else if (node->binaryop == ">=")
-        {
-            return Builder->CreateFCmpUGE(L, R, "compge");
-        }
-        else if (node->binaryop == "<=")
-        {
-            return Builder->CreateFCmpULE(L, R, "comple");
-        }
-        else if (node->binaryop == "!=")
-        {
-            return Builder->CreateFCmpUNE(L, R, "compne");
-        }
+        return binaryop(node);
     }
     else if (node->tokentype == "CallExpr") // 调用函数
     {
         Function *CalleeF = TheModule->getFunction(node->ID);
-        // if (!CalleeF)
-        //     return LogErrorV("Unknown function referenced");
+        if (!CalleeF)
+            std::cout<<("Unknown function referenced")<<std::endl;
         // if (CalleeF->arg_size() != Args.size())
         //     return LogErrorV("Incorrect # arguments passed");
-
         std::vector<Value *> ArgsV;
-        for (int i = 0 ; i <= node->child->size(); ++i)
+        for (int i = 0 ; i < node->child->size(); ++i)
         {
             // ArgsV.push_back(Args[i]->codegen());
             ArgsV.push_back(codeGen::generate(node->child->at(i)));
@@ -120,13 +142,42 @@ Value *codeGen::generate(AST *node){
             else
                 para++;
         }
-        if (node->dtype == "double")
+        // std::vector<Type *> parameter(para, Type::getDoubleTy(*TheContext));
+        std::vector<Type *> parameter;
+        for (int i = 0; i < para; i++)
         {
+            // printf("%s\n", node->child->at(i)->dtype.c_str());
+            if (node->child->at(i)->dtype == "int")
+            {
+                parameter.push_back(Type::getInt32Ty(*TheContext));
+                // parameter[i] = (Type::getInt32Ty(*TheContext));
+            }
+            else if (node->child->at(i)->dtype == "float")
+            {
+                parameter.push_back(Type::getFloatTy(*TheContext));
+                // parameter[i] = (Type::getFloatTy(*TheContext));
+            }else //double
+            {
+                parameter.push_back(Type::getDoubleTy(*TheContext));
+                // parameter[i] = (Type::getDoubleTy(*TheContext));
+            }
         }
-        std::vector<Type *> Doubles(para,Type::getDoubleTy(*TheContext));
-        FunctionType *FT =
-            FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
-            // Type::getInt32Ty
+        FunctionType *FT;
+        // std::vector<Type *> Doubles(para, Type::getDoubleTy(*TheContext));
+        if (node->dtype == "int"){
+            FT = FunctionType::get(Type::getInt32Ty(*TheContext), parameter, false);
+        }
+        else if (node->dtype == "float")
+        {
+            FT = FunctionType::get(Type::getFloatTy(*TheContext), parameter, false);
+        }
+        else // double
+        {
+            FT = FunctionType::get(Type::getDoubleTy(*TheContext), parameter, false);
+        }
+        // FunctionType *FT =
+        //     FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
+        // Type::getInt32Ty
         Function *F =
             Function::Create(FT, Function::ExternalLinkage, node->ID, TheModule.get());
         unsigned Idx = 0;
@@ -165,20 +216,31 @@ Value *codeGen::generate(AST *node){
         {
             return nullptr;
         }
+        for (int i = 0; i < node->child->size()-1; i++)
+        {
+            codeGen::generate(node->child->at(i));
+        }
 
-        return codeGen::generate(node->child->at(0)); // test
+        return codeGen::generate(node->child->at(node->child->size()-1)); // test
     }
     else if (node->tokentype == "ReturnStmt")
     {
-        return codeGen::generate(node->child->at(0));
+        if (node->child->size()==0)
+        {
+            return Builder->CreateRetVoid();
+        }
+        return Builder->CreateRet(codeGen::generate(node->child->at(0)));
+        // Builder.CreateRet(Builder.getInt32(0));
+        // return codeGen::generate(node->child->at(0));
     }
     else if (node->tokentype == "IfStmt")
     {
-        Value* CondV =  codeGen::generate(node->child->at(0));
+        
+        Value *CondV = codeGen::generate(node->child->at(0));
+        // printf("get if\n");
         if (!CondV)
             return nullptr;
         // Convert condition to a bool by comparing non-equal to 0.
-        // APInt i = APInt(1, 0);
         // CondV = Builder->CreateFCmpONE(CondV, ConstantInt::get(*TheContext, APInt(i)), "ifcond");
         Function *TheFunction = Builder->GetInsertBlock()->getParent();
         // Create blocks for the then and else cases.  Insert the 'then' block at the
@@ -186,7 +248,9 @@ Value *codeGen::generate(AST *node){
         BasicBlock *ThenBB = BasicBlock::Create(*TheContext, "then", TheFunction);
         BasicBlock *ElseBB = BasicBlock::Create(*TheContext, "else");
         BasicBlock *MergeBB = BasicBlock::Create(*TheContext, "ifcont");
+        // printf("get if1\n");
         Builder->CreateCondBr(CondV, ThenBB, ElseBB);
+        // printf("get if2\n");
         // Emit then value.
         Builder->SetInsertPoint(ThenBB);
         Value *ThenV = codeGen::generate(node->child->at(1));
@@ -212,19 +276,27 @@ Value *codeGen::generate(AST *node){
         Builder->CreateBr(MergeBB);
         // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
         ElseBB = Builder->GetInsertBlock();
-
         // Emit merge block.
         TheFunction->getBasicBlockList().push_back(MergeBB);
         Builder->SetInsertPoint(MergeBB);
-        PHINode *PN = Builder->CreatePHI(Type::getDoubleTy(*TheContext), 2, "iftmp");
-
-        PN->addIncoming(ThenV, ThenBB);
-        PN->addIncoming(ElseV, ElseBB);
-        return PN;
+        // PHINode *PN = Builder->CreatePHI(Type::getDoubleTy(*TheContext), 2, "iftmp");
+        // PHINode *PN = Builder->CreatePHI(Type::getInt32Ty(*TheContext), 2, "iftmp");
+        // PN->addIncoming(ThenV, ThenBB);
+        // PN->addIncoming(ElseV, ElseBB);
+        // return PN;
+    }
+    else if (node->tokentype == "ContinueStmt"){
+        // return Builder->CreateCon
+    }
+    else if (node->tokentype == "BreakStmt"){
+        // return Builder->CreateUnreachable
     }
 
-    return nullptr;
+
+        return nullptr;
 }
+
+
 codeGen::~codeGen()
 {
 }

@@ -44,6 +44,7 @@ public:
     codeGen();
     ~codeGen();
     llvm::Value* generate(AST *node);
+    llvm::Value* binaryop(AST *node);
     void print();
     int generate_o();
 };

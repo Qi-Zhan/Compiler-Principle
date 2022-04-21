@@ -9,6 +9,10 @@ symbolTable::~symbolTable()
 {
     
 }
+void symbolTable::generate_symbolTable(){
+
+}
+
 
 env::env(/* args */)
 {
