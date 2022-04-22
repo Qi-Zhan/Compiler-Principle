@@ -1,8 +1,8 @@
+#ifndef AST_H
+#define AST_H
 #include <string>
 #include <iostream>
 #include <vector>
-#ifndef AST_H
-#define AST_H
 
 
 class AST
@@ -26,6 +26,7 @@ public:
     void print(int n);
     void copy_child(AST *node);
     void reparent();
+    AST *ref; // 
 };
 
 #endif

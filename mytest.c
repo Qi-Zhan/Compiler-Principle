@@ -13,5 +13,5 @@ double f(double a, double b){
     a <= b;
 }
 double g(double a, double b){
-    return f(a, b) + f(b, a);
+    return f(a, b) + f(a, b);
 }
