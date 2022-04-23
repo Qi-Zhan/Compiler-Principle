@@ -21,20 +21,20 @@ void AST::print(int n)
     printf("-%s", this->tokentype.c_str());
     if (this->tokentype == "VarDecl" || this->tokentype == "ParmVarDecl")
     {
-        std::cout << " "<< this->dtype<<" "<<this->ID;
+        std::cout << " "<< this->ID<<" "<<this->dtype;
     }
     else if (this->tokentype == "BinaryOperator")
     {
-        std::cout << " " << this->binaryop;
+        std::cout << " " << this->binaryop<<" "<<this->dtype;
     }
     else if (this->tokentype == "Identifier")
     {
-        std::cout << " " << this->ID;
+        std::cout << " " << this->ID<<" "<<this->dtype;
         
     }
     else if (this->tokentype == "Constant")
     {
-        printf(" %s %g",this->dtype.c_str(), this->dvalue);
+        printf(" %g %s", this->dvalue, this->dtype.c_str());
     }
     else if (this->tokentype == "FunctionDecl")
     {
@@ -42,7 +42,7 @@ void AST::print(int n)
     }
     else if (this->tokentype == "CallExpr")
     {
-        printf(" %s", this->ID.c_str());
+        printf(" %s %s", this->ID.c_str(), this->dtype.c_str());
     }
     printf("\n");
     for (int i = 0; i < this->child->size(); i++)

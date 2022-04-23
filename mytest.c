@@ -1,7 +1,7 @@
-double f(double a, double b){
-    if (a > b)
+int f(int a, int b){
+    if (1)
     {
-        a==b;
+        a == b;
         a > b;
         return a + a + a;
     }else
@@ -11,7 +11,4 @@ double f(double a, double b){
     a > b;
     return a - b;
     a <= b;
-}
-double g(double a, double b){
-    return f(a, b) + f(a, b);
 }

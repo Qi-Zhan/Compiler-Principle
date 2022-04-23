@@ -573,13 +573,13 @@ static const yytype_int8 yytranslate[] =
 static const yytype_uint8 yyrline[] =
 {
        0,    53,    53,    54,    59,    64,    73,    74,    78,    79,
-      94,    96,   102,   106,   110,   111,   112,   113,   117,   118,
-     122,   123,   127,   128,   129,   130,   131,   135,   136,   140,
-     141,   145,   146,   147,   151,   153,   154,   158,   159,   160,
-     161,   162,   166,   167,   168,   169,   170,   171,   172,   173,
-     174,   175,   176,   177,   178,   179,   180,   181,   182,   183,
-     184,   185,   194,   198,   199,   200,   201,   202,   203,   204,
-     205
+      92,    94,   100,   104,   108,   109,   110,   111,   115,   116,
+     120,   121,   125,   126,   127,   128,   129,   133,   134,   138,
+     139,   143,   144,   145,   149,   151,   152,   156,   157,   158,
+     159,   160,   164,   165,   166,   167,   168,   169,   170,   171,
+     172,   173,   174,   175,   176,   177,   178,   179,   180,   181,
+     182,   183,   192,   196,   197,   198,   199,   200,   201,   202,
+     203
 };
 #endif
 
@@ -1373,21 +1373,21 @@ yyreduce:
     break;
 
   case 10: /* parameter_list: declaration_specifiers IDENTIFIER  */
-#line 94 "parse.y"
+#line 92 "parse.y"
                                             {(yyval.node) = new AST("ParmVarDecl"); AST* temp = new AST("ParmVarDecl");
                 temp->ID = (yyvsp[0].str); temp->dtype = (yyvsp[-1].node)->tokentype; (yyval.node)->insert(temp);}
 #line 1380 "parse.tab.cc"
     break;
 
   case 11: /* parameter_list: parameter_list ',' declaration_specifiers IDENTIFIER  */
-#line 96 "parse.y"
+#line 94 "parse.y"
                                                                {(yyval.node) = (yyvsp[-3].node); AST* temp = new AST("ParmVarDecl");
                 temp->ID = (yyvsp[0].str); temp->dtype = (yyvsp[-1].node)->tokentype; (yyval.node)->insert(temp);}
 #line 1387 "parse.tab.cc"
     break;
 
   case 12: /* function_definition: declaration_specifiers IDENTIFIER '(' parameter_list ')' compound_statement  */
-#line 102 "parse.y"
+#line 100 "parse.y"
                                                                                       {
                 (yyval.node) = new AST("test"); (yyval.node)->ID = (yyvsp[-4].str); (yyval.node)->dtype=(yyvsp[-5].node)->tokentype; // 同下
                 (yyval.node)->child = (yyvsp[-2].node)->child; (yyval.node)->insert((yyvsp[0].node)); 
@@ -1396,349 +1396,349 @@ yyreduce:
     break;
 
   case 13: /* function_definition: declaration_specifiers IDENTIFIER '(' ')' compound_statement  */
-#line 106 "parse.y"
+#line 104 "parse.y"
                                                                        {(yyval.node) = new AST("test"); (yyval.node)->ID = (yyvsp[-3].str); (yyval.node)->dtype=(yyvsp[-4].node)->tokentype;(yyval.node)->insert((yyvsp[0].node));}
 #line 1402 "parse.tab.cc"
     break;
 
   case 14: /* compound_statement: '{' '}'  */
-#line 110 "parse.y"
+#line 108 "parse.y"
                   {(yyval.node) = new AST("CompoundStmt"); }
 #line 1408 "parse.tab.cc"
     break;
 
   case 15: /* compound_statement: '{' statement_list '}'  */
-#line 111 "parse.y"
+#line 109 "parse.y"
                                  {(yyval.node) = new AST("CompoundStmt"); (yyval.node)->child = (yyvsp[-1].node)->child; }
 #line 1414 "parse.tab.cc"
     break;
 
   case 16: /* compound_statement: '{' declaration_list '}'  */
-#line 112 "parse.y"
+#line 110 "parse.y"
                                    {(yyval.node) = new AST("CompoundStmt"); (yyval.node)->child = (yyvsp[-1].node)->child;}
 #line 1420 "parse.tab.cc"
     break;
 
   case 17: /* compound_statement: '{' declaration_list statement_list '}'  */
-#line 113 "parse.y"
+#line 111 "parse.y"
                                                   {(yyval.node) = new AST("CompoundStmt"); (yyval.node)->child = (yyvsp[-2].node)->child;(yyval.node)->copy_child((yyvsp[-1].node));}
 #line 1426 "parse.tab.cc"
     break;
 
   case 18: /* declaration_list: declaration  */
-#line 117 "parse.y"
+#line 115 "parse.y"
                       {(yyval.node) = new AST("test"); (yyval.node)->insert((yyvsp[0].node));}
 #line 1432 "parse.tab.cc"
     break;
 
   case 19: /* declaration_list: declaration_list declaration  */
-#line 118 "parse.y"
+#line 116 "parse.y"
                                         {(yyval.node) = (yyvsp[-1].node); (yyval.node)->insert((yyvsp[0].node));}
 #line 1438 "parse.tab.cc"
     break;
 
   case 20: /* statement_list: statement  */
-#line 122 "parse.y"
+#line 120 "parse.y"
                     {(yyval.node) = new AST("test"); (yyval.node)->insert((yyvsp[0].node));}
 #line 1444 "parse.tab.cc"
     break;
 
   case 21: /* statement_list: statement_list statement  */
-#line 123 "parse.y"
+#line 121 "parse.y"
                                    {(yyval.node) = (yyvsp[-1].node); (yyval.node)->insert((yyvsp[0].node));}
 #line 1450 "parse.tab.cc"
     break;
 
   case 22: /* statement: compound_statement  */
-#line 127 "parse.y"
+#line 125 "parse.y"
                              {(yyval.node) = (yyvsp[0].node); }
 #line 1456 "parse.tab.cc"
     break;
 
   case 23: /* statement: expression_statement  */
-#line 128 "parse.y"
+#line 126 "parse.y"
                                {(yyval.node) = (yyvsp[0].node); }
 #line 1462 "parse.tab.cc"
     break;
 
   case 24: /* statement: selection_statement  */
-#line 129 "parse.y"
+#line 127 "parse.y"
                               {(yyval.node) = (yyvsp[0].node); }
 #line 1468 "parse.tab.cc"
     break;
 
   case 25: /* statement: iteration_statement  */
-#line 130 "parse.y"
+#line 128 "parse.y"
                               {(yyval.node) = (yyvsp[0].node); }
 #line 1474 "parse.tab.cc"
     break;
 
   case 26: /* statement: jump_statement  */
-#line 131 "parse.y"
+#line 129 "parse.y"
                          {(yyval.node) = (yyvsp[0].node); }
 #line 1480 "parse.tab.cc"
     break;
 
   case 27: /* expression_list: expression_list ',' expression  */
-#line 135 "parse.y"
+#line 133 "parse.y"
                                          {(yyval.node) = (yyvsp[-2].node); (yyval.node)->insert((yyvsp[0].node));}
 #line 1486 "parse.tab.cc"
     break;
 
   case 28: /* expression_list: expression  */
-#line 136 "parse.y"
+#line 134 "parse.y"
                      {(yyval.node) = new AST("test"); (yyval.node)->insert((yyvsp[0].node));}
 #line 1492 "parse.tab.cc"
     break;
 
   case 29: /* expression_statement: ';'  */
-#line 140 "parse.y"
+#line 138 "parse.y"
               {(yyval.node) = new AST("NullStmt");}
 #line 1498 "parse.tab.cc"
     break;
 
   case 30: /* expression_statement: expression ';'  */
-#line 141 "parse.y"
+#line 139 "parse.y"
                          {(yyval.node) = (yyvsp[-1].node);}
 #line 1504 "parse.tab.cc"
     break;
 
   case 31: /* selection_statement: IF '(' expression ')' statement ELSE statement  */
-#line 145 "parse.y"
+#line 143 "parse.y"
                                                          {(yyval.node) = new AST("IfStmt");(yyval.node)->insert((yyvsp[-4].node));(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1510 "parse.tab.cc"
     break;
 
   case 32: /* selection_statement: IF '(' expression ')' statement  */
-#line 146 "parse.y"
+#line 144 "parse.y"
                                           {(yyval.node) = new AST("IfStmt");}
 #line 1516 "parse.tab.cc"
     break;
 
   case 33: /* selection_statement: SWITCH '(' expression ')' statement  */
-#line 147 "parse.y"
+#line 145 "parse.y"
                                               {}
 #line 1522 "parse.tab.cc"
     break;
 
   case 34: /* iteration_statement: WHILE '(' expression ')' statement  */
-#line 151 "parse.y"
+#line 149 "parse.y"
                                              {(yyval.node) = new AST("WhileStmt"); (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1528 "parse.tab.cc"
     break;
 
   case 35: /* iteration_statement: FOR '(' expression_statement expression_statement ')' statement  */
-#line 153 "parse.y"
+#line 151 "parse.y"
                                                                           {(yyval.node) = new AST("ForStmt"); (yyval.node)->insert((yyvsp[-3].node));(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1534 "parse.tab.cc"
     break;
 
   case 36: /* iteration_statement: FOR '(' expression_statement expression_statement expression ')' statement  */
-#line 154 "parse.y"
+#line 152 "parse.y"
                                                                                      {(yyval.node) = new AST("ForStmt");(yyval.node)->insert((yyvsp[-4].node));(yyval.node)->insert((yyvsp[-3].node));(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1540 "parse.tab.cc"
     break;
 
   case 37: /* jump_statement: GOTO IDENTIFIER ';'  */
-#line 158 "parse.y"
+#line 156 "parse.y"
                               {}
 #line 1546 "parse.tab.cc"
     break;
 
   case 38: /* jump_statement: CONTINUE ';'  */
-#line 159 "parse.y"
+#line 157 "parse.y"
                        {(yyval.node) =  new AST("ContinueStmt");}
 #line 1552 "parse.tab.cc"
     break;
 
   case 39: /* jump_statement: BREAK ';'  */
-#line 160 "parse.y"
+#line 158 "parse.y"
                     {(yyval.node) = new AST("BreakStmt");}
 #line 1558 "parse.tab.cc"
     break;
 
   case 40: /* jump_statement: RETURN ';'  */
-#line 161 "parse.y"
+#line 159 "parse.y"
                      {(yyval.node) = new AST("ReturnStmt");}
 #line 1564 "parse.tab.cc"
     break;
 
   case 41: /* jump_statement: RETURN expression ';'  */
-#line 162 "parse.y"
+#line 160 "parse.y"
                                 {(yyval.node) = new AST("ReturnStmt"); (yyval.node)->insert((yyvsp[-1].node)); }
 #line 1570 "parse.tab.cc"
     break;
 
   case 42: /* expression: expression '+' expression  */
-#line 166 "parse.y"
+#line 164 "parse.y"
                                     {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="+"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1576 "parse.tab.cc"
     break;
 
   case 43: /* expression: expression '-' expression  */
-#line 167 "parse.y"
+#line 165 "parse.y"
                                     {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="-"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1582 "parse.tab.cc"
     break;
 
   case 44: /* expression: expression '*' expression  */
-#line 168 "parse.y"
+#line 166 "parse.y"
                                     {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="*"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1588 "parse.tab.cc"
     break;
 
   case 45: /* expression: expression '/' expression  */
-#line 169 "parse.y"
+#line 167 "parse.y"
                                     {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="/"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1594 "parse.tab.cc"
     break;
 
   case 46: /* expression: expression AND_OP expression  */
-#line 170 "parse.y"
+#line 168 "parse.y"
                                        {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="&&"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1600 "parse.tab.cc"
     break;
 
   case 47: /* expression: expression OR_OP expression  */
-#line 171 "parse.y"
+#line 169 "parse.y"
                                       {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="||"; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1606 "parse.tab.cc"
     break;
 
   case 48: /* expression: expression LE_OP expression  */
-#line 172 "parse.y"
+#line 170 "parse.y"
                                        {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="<="; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1612 "parse.tab.cc"
     break;
 
   case 49: /* expression: expression NE_OP expression  */
-#line 173 "parse.y"
+#line 171 "parse.y"
                                       {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="!="; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1618 "parse.tab.cc"
     break;
 
   case 50: /* expression: expression GE_OP expression  */
-#line 174 "parse.y"
+#line 172 "parse.y"
                                       {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop=">="; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1624 "parse.tab.cc"
     break;
 
   case 51: /* expression: expression EQ_OP expression  */
-#line 175 "parse.y"
+#line 173 "parse.y"
                                         {(yyval.node) = new AST("BinaryOperator"); (yyval.node)->binaryop="==";(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1630 "parse.tab.cc"
     break;
 
   case 52: /* expression: expression '<' expression  */
-#line 176 "parse.y"
+#line 174 "parse.y"
                                       {(yyval.node) = new AST("BinaryOperator"); (yyval.node)->binaryop="<";(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1636 "parse.tab.cc"
     break;
 
   case 53: /* expression: expression '>' expression  */
-#line 177 "parse.y"
+#line 175 "parse.y"
                                       {(yyval.node) = new AST("BinaryOperator"); (yyval.node)->binaryop=">";(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1642 "parse.tab.cc"
     break;
 
   case 54: /* expression: expression '=' expression  */
-#line 178 "parse.y"
+#line 176 "parse.y"
                                     {(yyval.node) = new AST("BinaryOperator");(yyval.node)->binaryop="="; (yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1648 "parse.tab.cc"
     break;
 
   case 55: /* expression: IDENTIFIER '[' expression ']'  */
-#line 179 "parse.y"
+#line 177 "parse.y"
                                         {}
 #line 1654 "parse.tab.cc"
     break;
 
   case 56: /* expression: IDENTIFIER '(' expression_list ')'  */
-#line 180 "parse.y"
+#line 178 "parse.y"
                                              {(yyval.node) = new AST("CallExpr"); (yyval.node)->ID = (yyvsp[-3].str); (yyval.node)->child = (yyvsp[-1].node)->child;}
 #line 1660 "parse.tab.cc"
     break;
 
   case 57: /* expression: IDENTIFIER  */
-#line 181 "parse.y"
+#line 179 "parse.y"
                      {(yyval.node) = new AST("Identifier"); (yyval.node)->ID = (yyvsp[0].str); }
 #line 1666 "parse.tab.cc"
     break;
 
   case 58: /* expression: CONSTANTf  */
-#line 182 "parse.y"
+#line 180 "parse.y"
                     {(yyval.node) = new AST("Constant"); (yyval.node)->dvalue = (yyvsp[0].numf); (yyval.node)->dtype = "float"; }
 #line 1672 "parse.tab.cc"
     break;
 
   case 59: /* expression: CONSTANTi  */
-#line 183 "parse.y"
+#line 181 "parse.y"
                     {(yyval.node) = new AST("Constant"); (yyval.node)->dvalue = (yyvsp[0].numi); (yyval.node)->dtype = "int";}
 #line 1678 "parse.tab.cc"
     break;
 
   case 60: /* expression: STRING_LITERAL  */
-#line 184 "parse.y"
+#line 182 "parse.y"
                          {}
 #line 1684 "parse.tab.cc"
     break;
 
   case 61: /* expression: '(' expression ')'  */
-#line 185 "parse.y"
+#line 183 "parse.y"
                              {(yyval.node) = new AST("ParenExpr"); (yyval.node)->insert((yyvsp[-1].node));}
 #line 1690 "parse.tab.cc"
     break;
 
   case 62: /* type_qualifier: CONST  */
-#line 194 "parse.y"
+#line 192 "parse.y"
                 {(yyval.node) = new AST("const");}
 #line 1696 "parse.tab.cc"
     break;
 
   case 63: /* type_specifier: VOID  */
-#line 198 "parse.y"
+#line 196 "parse.y"
                {(yyval.node) = new AST("void");}
 #line 1702 "parse.tab.cc"
     break;
 
   case 64: /* type_specifier: CHAR  */
-#line 199 "parse.y"
+#line 197 "parse.y"
                {(yyval.node) = new AST("char");}
 #line 1708 "parse.tab.cc"
     break;
 
   case 65: /* type_specifier: INT  */
-#line 200 "parse.y"
+#line 198 "parse.y"
               {(yyval.node) = new AST("int");}
 #line 1714 "parse.tab.cc"
     break;
 
   case 66: /* type_specifier: FLOAT  */
-#line 201 "parse.y"
+#line 199 "parse.y"
                 {(yyval.node) = new AST("float");}
 #line 1720 "parse.tab.cc"
     break;
 
   case 67: /* type_specifier: DOUBLE  */
-#line 202 "parse.y"
+#line 200 "parse.y"
                  {(yyval.node) = new AST("double");}
 #line 1726 "parse.tab.cc"
     break;
 
   case 68: /* type_specifier: UNSIGNED  */
-#line 203 "parse.y"
+#line 201 "parse.y"
                    {(yyval.node) = new AST("unsigned");}
 #line 1732 "parse.tab.cc"
     break;
 
   case 69: /* type_specifier: SIGNED  */
-#line 204 "parse.y"
+#line 202 "parse.y"
                   {(yyval.node) = new AST("signed");}
 #line 1738 "parse.tab.cc"
     break;
 
   case 70: /* type_specifier: AUTO  */
-#line 205 "parse.y"
+#line 203 "parse.y"
                {(yyval.node) = new AST("auto");}
 #line 1744 "parse.tab.cc"
     break;
@@ -1938,7 +1938,7 @@ yyreturn:
   return yyresult;
 }
 
-#line 217 "parse.y"
+#line 215 "parse.y"
 
 
 

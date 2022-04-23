@@ -83,8 +83,6 @@ declaration_specifiers
 /* 可以只声明，也可以同时初始化 */
 
 
-/* 对象可以是ID, 也可以是数组 */
-
 identifier_list
         : IDENTIFIER
         | identifier_list ',' IDENTIFIER

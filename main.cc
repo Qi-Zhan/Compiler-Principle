@@ -26,20 +26,16 @@ int main(int argc, const char *argv[])
     // auto SymbolTable = new symbolTable(head);
     if (semantic->table->generate_symbolTable() == 0)
     {
-        semantic->table->print_table();
-    }
-    semantic->table->main_env->print_env(0);
-    if (semantic->type_inference() == 0)
-    {
+        semantic->table->main_env->print_env(0);
         printf("Pass Semantic Checking!\n");
     }
-
     printf("New AST!\n");
+    head->print(0); // print AST
     printf("Generating IR...\n");
-    // auto CodeGen = new codeGen();
-    // CodeGen->generate(head);
-    // CodeGen->print();
-    // printf("Generating Objective Code...\n");
-    // CodeGen->generate_o();
+    auto CodeGen = new codeGen();
+    CodeGen->generate(head);
+    CodeGen->print();
+    printf("Generating Objective Code...\n");
+    CodeGen->generate_o();
     return 0;
 }
