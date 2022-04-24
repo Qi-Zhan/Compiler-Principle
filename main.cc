@@ -23,10 +23,9 @@ int main(int argc, const char *argv[])
     head->print(0); // print AST
     printf("Generating Symbol Table...\n");
     auto semantic = new semanticAnalysis(head);
-    // auto SymbolTable = new symbolTable(head);
     if (semantic->table->generate_symbolTable() == 0)
     {
-        semantic->table->main_env->print_env(0);
+        // semantic->table->main_env->print_env(0);
         printf("Pass Semantic Checking!\n");
     }
     printf("New AST!\n");

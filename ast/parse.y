@@ -141,7 +141,7 @@ expression_statement
 
 selection_statement
         : IF '(' expression ')' statement ELSE statement {$$ = new AST("IfStmt");$$->insert($3);$$->insert($5);$$->insert($7);}
-        | IF '(' expression ')' statement {$$ = new AST("IfStmt");}
+        | IF '(' expression ')' statement {$$ = new AST("IfStmt");$$->insert($3);$$->insert($5);}
         | SWITCH '(' expression ')' statement {}
         ;
 

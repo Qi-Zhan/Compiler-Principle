@@ -1511,7 +1511,7 @@ yyreduce:
 
   case 32: /* selection_statement: IF '(' expression ')' statement  */
 #line 144 "parse.y"
-                                          {(yyval.node) = new AST("IfStmt");}
+                                          {(yyval.node) = new AST("IfStmt");(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1516 "parse.tab.cc"
     break;
 

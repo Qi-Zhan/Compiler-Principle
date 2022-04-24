@@ -19,10 +19,19 @@ Value *codeGen::binaryop(AST *node){
     Value *R = codeGen::generate(node->child->at(1));
     std::string type0 = node->child->at(0)->dtype;
     std::string type1 = node->child->at(1)->dtype;
-    // bool allint = (type0 == "int") && (type1 == "int");
     bool allint = (node->dtype == "int");
-    // std::cout << type0 << type1 << std::endl;
-    // allint = true; //test
+    // convert type
+    if (type0 != type1)
+    {
+        if (type1 == node->dtype)
+        {
+            L = Builder->CreateCast(Instruction::SIToFP, L, R->getType());
+        }else{
+            R = Builder->CreateCast(Instruction::SIToFP, R, L->getType());
+        }
+        
+    }
+    
     if (!L || !R)
         return nullptr;
     if (node->binaryop == "+")
@@ -34,6 +43,8 @@ Value *codeGen::binaryop(AST *node){
     }
     else if (node->binaryop == "-")
     {
+        if (allint)
+            return Builder->CreateSub(L, R, "subtmp");
         return Builder->CreateFSub(L, R, "subtmp");
     }
     else if (node->binaryop == "*") // a lot todo
@@ -45,14 +56,25 @@ Value *codeGen::binaryop(AST *node){
     }
     else if (node->binaryop == "/") // a lot todo
     {
-        return Builder->CreateFDiv(L, R, "subtmp");
+        if(allint)
+            return Builder->CreateSDiv(L, R, "divtmp");
+        return Builder->CreateFDiv(L, R, "divtmp");
     }
     else if (node->binaryop == "<")
     {
+        if (allint)
+        {
+            return Builder->CreateICmpSLT(L, R, "complt");
+        }
+
         return Builder->CreateFCmpULT(L, R, "complt");
     }
     else if (node->binaryop == ">")
     {
+        if (allint)
+        {
+            return Builder->CreateICmpSGT(L, R, "compgt");
+        }
         return Builder->CreateFCmpUGT(L, R, "compgt");
     }
     else if (node->binaryop == "==")
@@ -65,14 +87,26 @@ Value *codeGen::binaryop(AST *node){
     }
     else if (node->binaryop == ">=")
     {
+        if (allint)
+        {
+            return Builder->CreateICmpSGE(L, R, "compge");
+        }
         return Builder->CreateFCmpUGE(L, R, "compge");
     }
     else if (node->binaryop == "<=")
     {
+        if (allint)
+        {
+            return Builder->CreateICmpSLE(L, R, "comple");
+        }
         return Builder->CreateFCmpULE(L, R, "comple");
     }
     else if (node->binaryop == "!=")
     {
+        if (allint)
+        {
+            return Builder->CreateICmpNE(L, R, "compne");
+        }
         return Builder->CreateFCmpUNE(L, R, "compne");
     }
     return nullptr;
@@ -200,7 +234,7 @@ Value *codeGen::generate(AST *node){
             return TheFunction;
         }else
         {
-            Builder->CreateRet(nullptr);
+            // Builder->CreateRet(nullptr);
             // Validate the generated code, checking for consistency.
             verifyFunction(*TheFunction);
             return TheFunction;
@@ -208,30 +242,34 @@ Value *codeGen::generate(AST *node){
         
         // Error reading body, remove function.
         TheFunction->eraseFromParent();
-        return nullptr;
+        // return nullptr;
     }
     else if (node->tokentype == "CompoundStmt")
     {
         if (node->child->size()==0)
         {
-            return nullptr;
+            // return nullptr;
         }
-        for (int i = 0; i < node->child->size()-1; i++)
+        for (int i = 0; i < node->child->size(); i++)
         {
             codeGen::generate(node->child->at(i));
         }
 
-        return codeGen::generate(node->child->at(node->child->size()-1)); // test
+        // return codeGen::generate(node->child->at(node->child->size()-1)); // test
     }
     else if (node->tokentype == "ReturnStmt")
     {
         if (node->child->size()==0)
         {
+            // printf("1111\n11111\n");
+            // return Builder->CreateRetVoid();
             return Builder->CreateRetVoid();
+        }else{
+            return Builder->CreateRet(codeGen::generate(node->child->at(0)));
         }
-        return Builder->CreateRet(codeGen::generate(node->child->at(0)));
+        
         // Builder.CreateRet(Builder.getInt32(0));
-        // return codeGen::generate(node->child->at(0));
+        return codeGen::generate(node->child->at(0));
     }
     else if (node->tokentype == "IfStmt")
     {
@@ -247,43 +285,33 @@ Value *codeGen::generate(AST *node){
         // end of the function.
         BasicBlock *ThenBB = BasicBlock::Create(*TheContext, "then", TheFunction);
         BasicBlock *ElseBB = BasicBlock::Create(*TheContext, "else");
-        BasicBlock *MergeBB = BasicBlock::Create(*TheContext, "ifcont");
+        BasicBlock *MergeBB = BasicBlock::Create(*TheContext, "merge");
         // printf("get if1\n");
         Builder->CreateCondBr(CondV, ThenBB, ElseBB);
         // printf("get if2\n");
         // Emit then value.
         Builder->SetInsertPoint(ThenBB);
-        Value *ThenV = codeGen::generate(node->child->at(1));
-        if (!ThenV)
-            return nullptr;
+        codeGen::generate(node->child->at(1));
+        // if (!ThenV)
+        //     return nullptr;
+        // printf("elseelsel           selse\n");
         Builder->CreateBr(MergeBB);
         // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
         ThenBB = Builder->GetInsertBlock();
-
         // Emit else block.
         TheFunction->getBasicBlockList().push_back(ElseBB);
         Builder->SetInsertPoint(ElseBB);
-
-        Value *ElseV = nullptr;
-        if (node->child->size() == 3) // no else
+        // printf("elseelselselse\n");
+        // Value *ElseV = nullptr;
+        if (node->child->size() == 3) // exist else
         {
             // printf("elseelselselse\n");
-            ElseV = codeGen::generate(node->child->at(2));
+            codeGen::generate(node->child->at(2));
         }
-        if (!ElseV)
-            return nullptr;
-
         Builder->CreateBr(MergeBB);
-        // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
         ElseBB = Builder->GetInsertBlock();
-        // Emit merge block.
         TheFunction->getBasicBlockList().push_back(MergeBB);
         Builder->SetInsertPoint(MergeBB);
-        // PHINode *PN = Builder->CreatePHI(Type::getDoubleTy(*TheContext), 2, "iftmp");
-        // PHINode *PN = Builder->CreatePHI(Type::getInt32Ty(*TheContext), 2, "iftmp");
-        // PN->addIncoming(ThenV, ThenBB);
-        // PN->addIncoming(ElseV, ElseBB);
-        // return PN;
     }
     else if (node->tokentype == "ContinueStmt"){
         // return Builder->CreateCon
@@ -293,7 +321,7 @@ Value *codeGen::generate(AST *node){
     }
 
 
-        return nullptr;
+    return nullptr;
 }
 
 
