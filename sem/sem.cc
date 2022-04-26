@@ -109,6 +109,7 @@ int env::build_env(AST* node){
             build_env(node->child->at(i));
         }
         if (token == "BinaryOperator")
+        // check = left identifier todo
         {
             if (arith.count(node->binaryop))
             {

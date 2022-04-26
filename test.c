@@ -7,7 +7,7 @@ int f(int);
 int main()
 {
     // printf("%f\n", g(1110.0, 400.0));
-    printf("%d\n", f(5));
+    printf("%d\n", f(331));
     // printf("%f\n", f(10));
     // printf("%d", a);
     return 0;

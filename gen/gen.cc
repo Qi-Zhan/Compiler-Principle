@@ -5,7 +5,8 @@ static std::unique_ptr<LLVMContext> TheContext;
 static std::unique_ptr<Module> TheModule;
 static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, GlobalVariable *> GlobalValues;
-static std::map<std::string, Value *> NamedValues;
+// static std::map<std::string, Value *> NamedValues;
+static std::map<std::string, AllocaInst *> NamedValues;
 // static std::map<AST *, Value *> mySymbolTable;
 // static llvm::ValueSymbolTable *llvm_SymbolTable;
 static llvm::BasicBlock *CurrentMerge = nullptr;
@@ -19,6 +20,12 @@ static void InitializeModule()
 
     // // Create a new builder for the module.
     Builder = std::make_unique<IRBuilder<>>(*TheContext);
+}
+static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const std::string &VarName, Type* valuetype)
+{
+    IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+    return TmpB.CreateAlloca(valuetype, 0, VarName.c_str());
+    // return TmpB.CreateAlloca(Type::getDoubleTy(*TheContext), 0,VarName.c_str());
 }
 Value *codeGen::binaryop(AST *node){
     Value *L = codeGen::generate(node->child->at(0));
@@ -40,6 +47,14 @@ Value *codeGen::binaryop(AST *node){
     }
     if (!L || !R)
         return nullptr;
+    if (node->binaryop == "="){
+        Value *Variable = NamedValues[std::string(node->child->at(0)->ID)];
+        if (!Variable){ // 全局里面找
+            Variable = GlobalValues[node->child->at(0)->ID];
+        }
+        Builder->CreateStore(R, Variable);
+        return R;
+    }
     if (node->binaryop == "+")
     {
         if (allint)
@@ -209,24 +224,16 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "Identifier")
     {
-        auto block =  Builder->GetInsertBlock();
-        auto symbol = block->getValueSymbolTable();
-        Value* V = symbol->lookup(node->ID);
-        if (V)
-        {
-            // return Builder->CreateLoad(V, node->ID.c_str());
-            return V;
-        }else{ // global找
+        AllocaInst *V_ = NamedValues[node->ID];
+        if (!V_){
+            printf("Find variable name in Global\n");
             GlobalVariable *X = GlobalValues[node->ID];
-            // LoadInst()
-            V = new LoadInst(str2type(node->dtype), X, node->ID, block);
-            // LoadInst(X->getType(), V, node->ID, block);
-            return V;
-            // Value *loadedValue = new LoadInst(X);
+            auto block = Builder->GetInsertBlock();
+            return new LoadInst(str2type(node->dtype), X, node->ID, block);
         }
-        // Value *V = NamedValues[node->ID];
-        
-        return V;
+        return Builder->CreateLoad(V_->getAllocatedType(),V_, node->ID.c_str());
+        // auto symbol = block->getValueSymbolTable();
+        // Value* V = symbol->lookup(node->ID);
     }
     else if (node->tokentype == "BinaryOperator")
     {
@@ -237,8 +244,6 @@ Value *codeGen::generate(AST *node){
         Function *CalleeF = TheModule->getFunction(node->ID);
         if (!CalleeF)
             std::cout<<("Unknown function referenced")<<std::endl;
-        // if (CalleeF->arg_size() != Args.size())
-        //     return LogErrorV("Incorrect # arguments passed");
         std::vector<Value *> ArgsV;
         for (int i = 0 ; i < node->child->size(); ++i)
         {
@@ -247,7 +252,6 @@ Value *codeGen::generate(AST *node){
             if (!ArgsV.back())
                 return nullptr;
         }
-
         return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
     }
     else if (node->tokentype == "FunctionDecl") // 函数定义
@@ -261,8 +265,7 @@ Value *codeGen::generate(AST *node){
         }
         // std::vector<Type *> parameter(para, Type::getDoubleTy(*TheContext));
         std::vector<Type *> parameter;
-        for (int i = 0; i < para; i++)
-        {
+        for (int i = 0; i < para; i++){
             // printf("%s\n", node->child->at(i)->dtype.c_str());
             if (node->child->at(i)->dtype == "int")
             {
@@ -291,9 +294,6 @@ Value *codeGen::generate(AST *node){
         {
             FT = FunctionType::get(Type::getDoubleTy(*TheContext), parameter, false);
         }
-        // FunctionType *FT =
-        //     FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
-        // Type::getInt32Ty
         Function *F =
             Function::Create(FT, Function::ExternalLinkage, node->ID, TheModule.get());
         unsigned Idx = 0;
@@ -304,8 +304,12 @@ Value *codeGen::generate(AST *node){
         BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
         Builder->SetInsertPoint(BB);
         NamedValues.clear();
-        for (auto &Arg : TheFunction->args())
-            NamedValues[std::string(Arg.getName())] = &Arg;
+        for (auto &Arg : TheFunction->args()){
+            AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, std::string(Arg.getName()),Arg.getType());
+            Builder->CreateStore(&Arg, Alloca);
+            NamedValues[std::string(Arg.getName())] = Alloca;
+        }
+            // NamedValues[std::string(Arg.getName())] = &Arg;
         // printf("child is %d para is %d\n", node->child->size(),para);
         if (Value *RetVal = codeGen::generate(node->child->at(para))) // para 为 basic block 位置
         {
@@ -321,7 +325,6 @@ Value *codeGen::generate(AST *node){
             verifyFunction(*TheFunction);
             return TheFunction;
         }
-        
         // Error reading body, remove function.
         TheFunction->eraseFromParent();
         // return nullptr;
@@ -405,18 +408,13 @@ Value *codeGen::generate(AST *node){
         if (node->child->size()==1) // 有初始赋值
         {
             // printf("local\n");
-            Value *temp = Builder->CreateAlloca(str2type(node->dtype), 0, "loadtmp");
+            AllocaInst *temp = Builder->CreateAlloca(str2type(node->dtype), 0, "loadtmp");
             Value* va = codeGen::generate(node->child->at(0));
             Builder->CreateStore(va, temp, 0);
-            // StoreInst()
-            // Value* V = new LoadInst(str2type(node->dtype), temp, node->ID, block);
-
-            // printf("local 22");
-        }
-        else
-        {
-            Builder->CreateAlloca(Builder->getInt32Ty(), 0, node->ID);
-            Value *temp;
+            NamedValues.insert({node->ID, temp});
+        }else{
+            AllocaInst * temp = Builder->CreateAlloca(str2type(node->dtype), 0, node->ID);
+            NamedValues.insert({node->ID, temp});
         }
     }
     return nullptr;
