@@ -1529,7 +1529,7 @@ yyreduce:
 
   case 35: /* iteration_statement: FOR '(' expression_statement expression_statement ')' statement  */
 #line 151 "parse.y"
-                                                                          {(yyval.node) = new AST("ForStmt"); (yyval.node)->insert((yyvsp[-3].node));(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
+                                                                          {(yyval.node) = new AST("ForStmt");(yyval.node)->insert( new AST("EmptyInit")) ;(yyval.node)->insert((yyvsp[-3].node));(yyval.node)->insert((yyvsp[-2].node));(yyval.node)->insert((yyvsp[0].node));}
 #line 1534 "parse.tab.cc"
     break;
 

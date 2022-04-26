@@ -33,7 +33,7 @@ Value *codeGen::binaryop(AST *node){
     std::string type0 = node->child->at(0)->dtype;
     std::string type1 = node->child->at(1)->dtype;
     bool allint = (node->dtype == "int");
-    std::cout << type0 << type1 << std::endl;
+    // std::cout << type0 << type1 << std::endl;
     // convert type
     if (type0 != type1)
     {
@@ -226,7 +226,7 @@ Value *codeGen::generate(AST *node){
     {
         AllocaInst *V_ = NamedValues[node->ID];
         if (!V_){
-            printf("Find variable name in Global\n");
+            // printf("Find variable name in Global\n");
             GlobalVariable *X = GlobalValues[node->ID];
             auto block = Builder->GetInsertBlock();
             return new LoadInst(str2type(node->dtype), X, node->ID, block);
@@ -416,6 +416,36 @@ Value *codeGen::generate(AST *node){
             AllocaInst * temp = Builder->CreateAlloca(str2type(node->dtype), 0, node->ID);
             NamedValues.insert({node->ID, temp});
         }
+    }
+    else if (node->tokentype == "ForStmt"){
+        Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        BasicBlock *entryBB = BasicBlock::Create(*TheContext, "entry", TheFunction);
+        BasicBlock *loopBB = BasicBlock::Create(*TheContext, "loop", TheFunction);
+        BasicBlock *endLoopBB = BasicBlock::Create(*TheContext, "endloop", TheFunction);
+        BasicBlock *endEntryBB = BasicBlock::Create(*TheContext, "endentry", TheFunction);
+        Builder->CreateBr(entryBB);
+        // entry
+        Builder->SetInsertPoint(entryBB);
+        if(node->child->size()==4){ // 有初始化
+            codeGen::generate(node->child->at(0));
+        }
+        Value *EndCond = codeGen::generate(node->child->at(1)); // 判断条件
+        Builder->CreateCondBr(EndCond, loopBB, endEntryBB);
+        Builder->SetInsertPoint(loopBB);
+        // loop
+        codeGen::generate(node->child->at(3));
+        Builder->CreateBr(endLoopBB);
+        // endLoopBB
+        Builder->SetInsertPoint(endLoopBB);
+        codeGen::generate(node->child->at(2));
+        Value *EndCond_ = codeGen::generate(node->child->at(1)); // 判断条件
+        Builder->CreateCondBr(EndCond_, loopBB, endEntryBB);
+        // endInit
+        Builder->SetInsertPoint(endEntryBB);
+        // Builder->CreateRet(initVal);
+    }
+    else if (node->tokentype == "WhileStmt"){
+
     }
     return nullptr;
 }

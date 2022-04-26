@@ -148,7 +148,7 @@ selection_statement
 iteration_statement
         : WHILE '(' expression ')' statement {$$ = new AST("WhileStmt"); $$->insert($3);$$->insert($5);}
         /* | DO statement WHILE '(' expression ')' ';' {} */
-        | FOR '(' expression_statement expression_statement ')' statement {$$ = new AST("ForStmt"); $$->insert($3);$$->insert($4);$$->insert($6);}
+        | FOR '(' expression_statement expression_statement ')' statement {$$ = new AST("ForStmt");$$->insert( new AST("EmptyInit")) ;$$->insert($3);$$->insert($4);$$->insert($6);}
         | FOR '(' expression_statement expression_statement expression ')' statement {$$ = new AST("ForStmt");$$->insert($3);$$->insert($4);$$->insert($5);$$->insert($7);}
         ;
 

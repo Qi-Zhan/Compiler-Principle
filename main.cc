@@ -17,6 +17,9 @@ int main(int argc, const char *argv[])
     int result = yyparse();
     if(result == 0){
         printf("parse successfully!\n");
+    }else{
+        printf("parse error!");
+        return 1;
     }
     fclose(yyin);
     head->reparent(); // remake parent
