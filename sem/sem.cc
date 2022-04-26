@@ -59,6 +59,11 @@ int check_redef(std::unordered_map<std::string, AST *> map, std::string key)
 int env::build_env(AST* node){
     std::string token = node->tokentype;
     if (token == "ParmVarDecl" || token == "VarDecl"){
+        for (int i = 0; i < node->child->size(); i++)
+        {
+            build_env(node->child->at(i));
+        }
+
         check_redef(define, node->ID);
         define.insert({node->ID, node});
     }

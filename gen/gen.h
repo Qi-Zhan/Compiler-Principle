@@ -24,6 +24,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/IR/ValueSymbolTable.h"
+#include "llvm/IR/SymbolTableListTraits.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -38,13 +40,16 @@
 class codeGen
 {
 private:
-    
+
+
 public:
     AST *head;
     codeGen();
     ~codeGen();
+    llvm::Value *binaryop(AST *node);
+    llvm::GlobalVariable *createGlobal(llvm::Type *type, std::string name);
     llvm::Value* generate(AST *node);
-    llvm::Value* binaryop(AST *node);
+    
     void print();
     int generate_o();
 };

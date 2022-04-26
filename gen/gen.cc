@@ -4,7 +4,13 @@ using namespace llvm::sys;
 static std::unique_ptr<LLVMContext> TheContext;
 static std::unique_ptr<Module> TheModule;
 static std::unique_ptr<IRBuilder<>> Builder;
+static std::map<std::string, GlobalVariable *> GlobalValues;
 static std::map<std::string, Value *> NamedValues;
+// static std::map<AST *, Value *> mySymbolTable;
+// static llvm::ValueSymbolTable *llvm_SymbolTable;
+static llvm::BasicBlock *CurrentMerge = nullptr;
+static llvm::BasicBlock *CurrentCond = nullptr;
+
 static void InitializeModule()
 {
     // Open a new context and module.
@@ -20,6 +26,7 @@ Value *codeGen::binaryop(AST *node){
     std::string type0 = node->child->at(0)->dtype;
     std::string type1 = node->child->at(1)->dtype;
     bool allint = (node->dtype == "int");
+    std::cout << type0 << type1 << std::endl;
     // convert type
     if (type0 != type1)
     {
@@ -31,7 +38,6 @@ Value *codeGen::binaryop(AST *node){
         }
         
     }
-    
     if (!L || !R)
         return nullptr;
     if (node->binaryop == "+")
@@ -111,7 +117,29 @@ Value *codeGen::binaryop(AST *node){
     }
     return nullptr;
 }
-
+GlobalVariable* codeGen::createGlobal(Type* type, std::string name){
+    TheModule->getOrInsertGlobal(name, type);
+    GlobalVariable* v = TheModule->getNamedGlobal(name);
+    return v;
+}
+Type* str2type(std::string str){
+    if (str == "int")
+    {
+        return Builder->getInt32Ty();
+    }
+    else if (str == "float")
+    {
+        return Builder->getFloatTy();
+    }
+    else if (str == "double")
+    {
+        return Builder->getDoubleTy();
+    }
+    else{
+        printf("No Such Type in str2type\n");
+        return Builder->getInt32Ty();
+    }
+}
 codeGen::codeGen(){
     InitializeModule();
 }
@@ -119,7 +147,47 @@ Value *codeGen::generate(AST *node){
     if (node->tokentype == "translation unit"){ // test first
         for (int i = 0; i < node->child->size(); i++)
         {
-            codeGen::generate(node->child->at(i));
+            if (node->child->at(i)->tokentype=="VarDecl") // global 
+            {
+                AST *ch = node->child->at(i);
+                GlobalVariable *gv;
+                if (ch->dtype == "int")
+                {
+                    gv = createGlobal(Builder->getInt32Ty(), ch->ID);
+                    if (ch->child->size()==1)
+                    {
+                        Value *v = codeGen::generate(ch->child->at(0));
+                        ConstantInt *CI = dyn_cast<ConstantInt>(v);
+                        ConstantInt *const_int_val = ConstantInt::get(TheModule->getContext(), APInt(CI->getValue()));
+                        gv->setInitializer(const_int_val);
+                    }
+                }
+                else if (ch->dtype == "float")
+                {
+                    gv = createGlobal(Builder->getFloatTy(), ch->ID);
+                    if (ch->child->size() == 1){
+                        Value *v = codeGen::generate(ch->child->at(0));
+                        ConstantFP *CI = dyn_cast<ConstantFP>(v);
+                        ConstantFP *const_int_val = ConstantFP::get(TheModule->getContext(), APFloat(CI->getValueAPF()));
+                        gv->setInitializer(const_int_val);
+                    }
+                }
+                else if (ch->dtype == "double"){
+                    // bug to do
+                    gv = createGlobal(Builder->getDoubleTy(), ch->ID);
+                    if (ch->child->size() == 1){
+                        Value *v = codeGen::generate(ch->child->at(0));
+                        ConstantFP *CI = dyn_cast<ConstantFP>(v);
+                        ConstantFP *const_int_val = ConstantFP::get(TheModule->getContext(), APFloat(CI->getValueAPF()));
+                        gv->setInitializer(const_int_val);
+                    }
+                }else{
+                    printf("No such Type in Global\n");
+                }
+                GlobalValues.insert({ch->ID, gv});
+            }
+            else // function define
+                codeGen::generate(node->child->at(i));
         }
         return nullptr;
     }
@@ -136,13 +204,28 @@ Value *codeGen::generate(AST *node){
             // printf("get float\n");
             return ConstantFP::get(*TheContext, APFloat(node->dvalue));
         }else if(node->dtype == "double"){
-            
             return ConstantFP::get(*TheContext, APFloat(node->dvalue));
         }
     }
     else if (node->tokentype == "Identifier")
     {
-        Value *V = NamedValues[node->ID];
+        auto block =  Builder->GetInsertBlock();
+        auto symbol = block->getValueSymbolTable();
+        Value* V = symbol->lookup(node->ID);
+        if (V)
+        {
+            // return Builder->CreateLoad(V, node->ID.c_str());
+            return V;
+        }else{ // global找
+            GlobalVariable *X = GlobalValues[node->ID];
+            // LoadInst()
+            V = new LoadInst(str2type(node->dtype), X, node->ID, block);
+            // LoadInst(X->getType(), V, node->ID, block);
+            return V;
+            // Value *loadedValue = new LoadInst(X);
+        }
+        // Value *V = NamedValues[node->ID];
+        
         return V;
     }
     else if (node->tokentype == "BinaryOperator")
@@ -201,8 +284,7 @@ Value *codeGen::generate(AST *node){
         if (node->dtype == "int"){
             FT = FunctionType::get(Type::getInt32Ty(*TheContext), parameter, false);
         }
-        else if (node->dtype == "float")
-        {
+        else if (node->dtype == "float"){
             FT = FunctionType::get(Type::getFloatTy(*TheContext), parameter, false);
         }
         else // double
@@ -259,10 +341,10 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "ReturnStmt")
     {
-        if (node->child->size()==0)
-        {
+        if (node->child->size()==0){
             // printf("1111\n11111\n");
             // return Builder->CreateRetVoid();
+            
             return Builder->CreateRetVoid();
         }else{
             return Builder->CreateRet(codeGen::generate(node->child->at(0)));
@@ -272,8 +354,7 @@ Value *codeGen::generate(AST *node){
         return codeGen::generate(node->child->at(0));
     }
     else if (node->tokentype == "IfStmt")
-    {
-        
+    { 
         Value *CondV = codeGen::generate(node->child->at(0));
         // printf("get if\n");
         if (!CondV)
@@ -314,13 +395,30 @@ Value *codeGen::generate(AST *node){
         Builder->SetInsertPoint(MergeBB);
     }
     else if (node->tokentype == "ContinueStmt"){
-        // return Builder->CreateCon
+        // BasicBlock b = Builder->GetInsertBlock()->getParent();
+        Builder->CreateBr(CurrentCond);
     }
     else if (node->tokentype == "BreakStmt"){
-        // return Builder->CreateUnreachable
+        Builder->CreateBr(CurrentMerge);
     }
+    else if (node->tokentype == "VarDecl"){ // 局部变量
+        if (node->child->size()==1) // 有初始赋值
+        {
+            // printf("local\n");
+            Value *temp = Builder->CreateAlloca(str2type(node->dtype), 0, "loadtmp");
+            Value* va = codeGen::generate(node->child->at(0));
+            Builder->CreateStore(va, temp, 0);
+            // StoreInst()
+            // Value* V = new LoadInst(str2type(node->dtype), temp, node->ID, block);
 
-
+            // printf("local 22");
+        }
+        else
+        {
+            Builder->CreateAlloca(Builder->getInt32Ty(), 0, node->ID);
+            Value *temp;
+        }
+    }
     return nullptr;
 }
 

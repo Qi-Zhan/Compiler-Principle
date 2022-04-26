@@ -59,6 +59,7 @@
         "shared_mutex": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "set": "cpp"
     }
 }
