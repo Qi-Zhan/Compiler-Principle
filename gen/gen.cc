@@ -7,7 +7,7 @@ static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, GlobalVariable *> GlobalValues;
 // static std::map<std::string, Value *> NamedValues;
 static std::map<std::string, AllocaInst *> NamedValues;
-// static std::map<AST *, AllocaInst *> mySymbolTable;
+static std::map<AST *, AllocaInst *> mySymbolTable;
 // static llvm::ValueSymbolTable *llvm_SymbolTable;
 static llvm::BasicBlock *CurrentMerge = nullptr;
 static llvm::BasicBlock *CurrentCond = nullptr;
@@ -17,7 +17,6 @@ static void InitializeModule()
     // Open a new context and module.
     TheContext = std::make_unique<LLVMContext>();
     TheModule = std::make_unique<Module>("my cool ssc", *TheContext);
-
     // // Create a new builder for the module.
     Builder = std::make_unique<IRBuilder<>>(*TheContext);
 }
@@ -224,14 +223,16 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "Identifier")
     {
-        AllocaInst *V_ = NamedValues[node->ID];
-        if (!V_){
+        // AllocaInst *V = NamedValues[node->ID];
+        AllocaInst *V = mySymbolTable[node->ref];
+        if (!V) 
+        {
             // printf("Find variable name in Global\n");
             GlobalVariable *X = GlobalValues[node->ID];
             auto block = Builder->GetInsertBlock();
             return new LoadInst(str2type(node->dtype), X, node->ID, block);
         }
-        return Builder->CreateLoad(V_->getAllocatedType(),V_, node->ID.c_str());
+        return Builder->CreateLoad(V->getAllocatedType(),V, node->ID.c_str());
         // auto symbol = block->getValueSymbolTable();
         // Value* V = symbol->lookup(node->ID);
     }
@@ -304,14 +305,15 @@ Value *codeGen::generate(AST *node){
         BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
         Builder->SetInsertPoint(BB);
         NamedValues.clear();
+        Idx = 0;
         for (auto &Arg : TheFunction->args()){
             AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, std::string(Arg.getName()),Arg.getType());
             Builder->CreateStore(&Arg, Alloca);
+            mySymbolTable.insert({node->child->at(Idx++), Alloca}); // 函数参数map
             NamedValues[std::string(Arg.getName())] = Alloca;
         }
-            // NamedValues[std::string(Arg.getName())] = &Arg;
         // printf("child is %d para is %d\n", node->child->size(),para);
-        if (Value *RetVal = codeGen::generate(node->child->at(para))) // para 为 basic block 位置
+        if (Value *RetVal = codeGen::generate(node->child->at(para))) // para 为 compoundStmt 位置
         {
             // Finish off the function.
             Builder->CreateRet(RetVal);
@@ -320,11 +322,11 @@ Value *codeGen::generate(AST *node){
             return TheFunction;
         }else
         {
-            // Builder->CreateRet(nullptr);
             // Validate the generated code, checking for consistency.
             verifyFunction(*TheFunction);
             return TheFunction;
         }
+
         // Error reading body, remove function.
         TheFunction->eraseFromParent();
         // return nullptr;
@@ -344,6 +346,7 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "ReturnStmt")
     {
+        
         if (node->child->size()==0){
             // printf("1111\n11111\n");
             // return Builder->CreateRetVoid();
@@ -412,9 +415,13 @@ Value *codeGen::generate(AST *node){
             Value* va = codeGen::generate(node->child->at(0));
             Builder->CreateStore(va, temp, 0);
             NamedValues.insert({node->ID, temp});
-        }else{
+            mySymbolTable.insert({node, temp}); // 局部变量map
+        }
+        else
+        {
             AllocaInst * temp = Builder->CreateAlloca(str2type(node->dtype), 0, node->ID);
             NamedValues.insert({node->ID, temp});
+            mySymbolTable.insert({node, temp});
         }
     }
     else if (node->tokentype == "ForStmt"){

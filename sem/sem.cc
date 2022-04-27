@@ -1,7 +1,7 @@
 #include "sem.h"
 std::unordered_map<std::string, int> str_to_int{{"int", 0}, {"float", 1}, {"double", 2}};
 std::unordered_map<int ,std::string > int_to_str{{0 ,"int"}, {1, "float"}, {2, "double"}};
-std::set<std::string> arith = {"+", "-", "*", "/"};
+std::set<std::string> arith = {"+", "-", "*", "/","="};
 int max(int a, int b) { return a > b ? a : b; };
 semanticAnalysis::semanticAnalysis(AST *node)
 {
@@ -66,6 +66,7 @@ int env::build_env(AST* node){
 
         check_redef(define, node->ID);
         define.insert({node->ID, node});
+        node->ref = node; // 定义的ref是自己
     }
     else if (token == "FunctionDecl"){
         define.insert({node->ID, node});
@@ -94,6 +95,7 @@ int env::build_env(AST* node){
             if (temp->define.find(node->ID)!= temp->define.end()){
                 this->ref.insert({node->ID, temp->define[node->ID]});
                 node->dtype = temp->define[node->ID]->dtype; // given type
+                node->ref = temp->define[node->ID]; // 指向声明的AST* node
                 return 0;
             }
             else{

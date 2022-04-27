@@ -30,7 +30,10 @@ void AST::print(int n)
     else if (this->tokentype == "Identifier")
     {
         std::cout << " " << this->ID<<" "<<this->dtype;
-        
+        // if (this->ref)
+        // {
+        //     std::cout << " " << this->ref->tokentype;
+        // }
     }
     else if (this->tokentype == "Constant")
     {
