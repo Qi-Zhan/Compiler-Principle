@@ -26,7 +26,7 @@ public:
     void print(int n);
     void copy_child(AST *node);
     void reparent();
-    AST *ref; // maybe use it
+    AST *ref; // identifier to its declaration AST
 };
 
 #endif

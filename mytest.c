@@ -1,18 +1,7 @@
-int a = 0;
+float a = 5+0*1+0.1;
 int f(int x)
 {
-    int c = 10;
-    if (c==10)
-    {
-        int c = 3;
-        a = a + c;
-    }else{
-        int c = 9;
-        a = a + c;
-    }
-
-    return a+c;
-}
-int g(int x){
-    return f(x);
+    int a = 0;
+    a = x + 1;
+    return a;
 }

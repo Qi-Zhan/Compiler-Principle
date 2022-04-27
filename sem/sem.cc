@@ -63,7 +63,6 @@ int env::build_env(AST* node){
         {
             build_env(node->child->at(i));
         }
-
         check_redef(define, node->ID);
         define.insert({node->ID, node});
         node->ref = node; // 定义的ref是自己

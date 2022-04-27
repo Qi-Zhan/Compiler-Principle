@@ -41,14 +41,14 @@ Value *codeGen::binaryop(AST *node){
             L = Builder->CreateCast(Instruction::SIToFP, L, R->getType());
         }else{
             R = Builder->CreateCast(Instruction::SIToFP, R, L->getType());
-        }
-        
+        }  
     }
     if (!L || !R)
         return nullptr;
     if (node->binaryop == "="){
-        Value *Variable = NamedValues[std::string(node->child->at(0)->ID)];
-        if (!Variable){ // 全局里面找
+        Value *Variable = mySymbolTable[node->child->at(0)->ref];
+        if (!Variable)
+        { // 全局里面找
             Variable = GlobalValues[node->child->at(0)->ID];
         }
         Builder->CreateStore(R, Variable);
@@ -158,7 +158,7 @@ codeGen::codeGen(){
     InitializeModule();
 }
 Value *codeGen::generate(AST *node){
-    if (node->tokentype == "translation unit"){ // test first
+    if (node->tokentype == "translation unit"){ // 全局变量与函数
         for (int i = 0; i < node->child->size(); i++)
         {
             if (node->child->at(i)->tokentype=="VarDecl") // global 
@@ -181,6 +181,8 @@ Value *codeGen::generate(AST *node){
                     gv = createGlobal(Builder->getFloatTy(), ch->ID);
                     if (ch->child->size() == 1){
                         Value *v = codeGen::generate(ch->child->at(0));
+                        if (v->getType()!=Builder->getFloatTy())
+                            v = Builder->CreateCast(Instruction::SIToFP, v, Builder->getFloatTy());
                         ConstantFP *CI = dyn_cast<ConstantFP>(v);
                         ConstantFP *const_int_val = ConstantFP::get(TheModule->getContext(), APFloat(CI->getValueAPF()));
                         gv->setInitializer(const_int_val);
