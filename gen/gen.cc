@@ -7,7 +7,7 @@ static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, GlobalVariable *> GlobalValues;
 // static std::map<std::string, Value *> NamedValues;
 static std::map<std::string, AllocaInst *> NamedValues;
-// static std::map<AST *, Value *> mySymbolTable;
+// static std::map<AST *, AllocaInst *> mySymbolTable;
 // static llvm::ValueSymbolTable *llvm_SymbolTable;
 static llvm::BasicBlock *CurrentMerge = nullptr;
 static llvm::BasicBlock *CurrentCond = nullptr;
@@ -445,7 +445,21 @@ Value *codeGen::generate(AST *node){
         // Builder->CreateRet(initVal);
     }
     else if (node->tokentype == "WhileStmt"){
-
+        Function *TheFunction = Builder->GetInsertBlock()->getParent();
+        BasicBlock *entryBB = BasicBlock::Create(*TheContext, "entry", TheFunction);
+        BasicBlock *loopBB = BasicBlock::Create(*TheContext, "loop", TheFunction);
+        BasicBlock *endEntryBB = BasicBlock::Create(*TheContext, "endentry", TheFunction);
+        Builder->CreateBr(entryBB);
+        Builder->SetInsertPoint(entryBB);
+        Value *EndCond = codeGen::generate(node->child->at(0)); // 判断条件
+        Builder->CreateCondBr(EndCond, loopBB, endEntryBB);
+        Builder->SetInsertPoint(loopBB);
+        // loop
+        codeGen::generate(node->child->at(1));
+        Value *EndCond_ = codeGen::generate(node->child->at(0)); // 判断条件
+        Builder->CreateCondBr(EndCond_, loopBB, endEntryBB);
+        // endInit
+        Builder->SetInsertPoint(endEntryBB);
     }
     return nullptr;
 }

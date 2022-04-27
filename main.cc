@@ -31,7 +31,7 @@ int main(int argc, const char *argv[])
         // semantic->table->main_env->print_env(0);
         printf("Pass Semantic Checking!\n");
     }
-    printf("New AST!\n");
+    printf("Decorated AST!\n");
     head->print(0); // print AST
     printf("Generating IR...\n");
     auto CodeGen = new codeGen();

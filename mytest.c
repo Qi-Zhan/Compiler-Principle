@@ -2,10 +2,14 @@ int a = 1;
 int f(int x)
 {
     int c = 0;
-    int i = 0;
-    for (i = 1; i < 101; i=i+1)
+    if (x>0)
     {
-        c = c+i;
+        return c;
+    }else{
+        a = a + c;
     }
-    return c;
+    return a;
+}
+int g(int x){
+    return f(x);
 }
