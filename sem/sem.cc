@@ -83,11 +83,9 @@ int env::build_env(AST* node){
     }
     else if (token == "Identifier" || token == "CallExpr")
     { // find define or false
-        if (token=="CallExpr"){
+        if (token == "CallExpr"){
             for (int i = 0; i < node->child->size(); i++)
-            {
                 build_env(node->child->at(i));
-            }
         }
         env *temp = this;
         while (temp){
@@ -104,6 +102,13 @@ int env::build_env(AST* node){
         printf("Using undefined identifier %s \n", node->ID.c_str());
         return 1;
     }
+    else if (token == "ArraySubscriptExpr"){
+        for (int i = 0; i < node->child->size(); i++)
+            build_env(node->child->at(i));
+        AST *ch = node->child->at(0);
+        node->dtype = ch->dtype.substr(0,ch->dtype.length()-1);
+    }
+
     else{
         for (int i = 0; i < node->child->size(); i++)
         {
@@ -112,6 +117,7 @@ int env::build_env(AST* node){
         if (token == "BinaryOperator")
         // check = left identifier todo
         {
+
             if (arith.count(node->binaryop))
             {
                 node->dtype = int_to_str[max(str_to_int[node->child->at(0)->dtype], str_to_int[node->child->at(1)->dtype])];

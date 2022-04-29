@@ -40,14 +40,16 @@
 class codeGen
 {
 private:
-
+    llvm::Value *binaryop(AST *node);
+    llvm::GlobalVariable *createGlobal(llvm::Type *type, std::string name);
+    int createGlobalt(AST* ch);
+    int createArray(AST *node);
 
 public:
     AST *head;
     codeGen();
     ~codeGen();
-    llvm::Value *binaryop(AST *node);
-    llvm::GlobalVariable *createGlobal(llvm::Type *type, std::string name);
+
     llvm::Value* generate(AST *node);
     
     void print();

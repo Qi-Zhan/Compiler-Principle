@@ -27,6 +27,7 @@ public:
     void copy_child(AST *node);
     void reparent();
     AST *ref; // identifier to its declaration AST
+    int length;
 };
 
 #endif

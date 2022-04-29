@@ -1,5 +1,5 @@
 CXX = clang++
-CONFIG = `llvm-config --cxxflags --ldflags --system-libs --libs core`
+CONFIG = `llvm-config-12 --cxxflags --ldflags --system-libs --libs core`
 
 all: main.cc gen.o
 	make -C ast all

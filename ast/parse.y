@@ -64,6 +64,8 @@ external_declaration
         | declaration {
                 $$ =new AST("VarDecl");$$->dtype = $1->dtype; 
                 $$->ID = $1->ID;$$->child = $1->child; // expr 孩子
+                $$->tokentype = $1->tokentype;
+                $$->length = $1->length;
                 // std::cout<<$$->child->size();  
                 }
         ;
@@ -72,27 +74,33 @@ external_declaration
 declaration
         : declaration_specifiers IDENTIFIER ';' {$$ = new AST("VarDecl"); $$->dtype = $1->tokentype;$$->ID = $2; }
         | declaration_specifiers IDENTIFIER '=' expression ';' {$$ = new AST("VarDecl"); $$->dtype = $1->tokentype;$$->ID = $2;$$->insert($4);}
+        | declaration_specifiers IDENTIFIER '[' CONSTANTi ']'';'{$$ = new AST("VarDecl");$$->dtype = $1->tokentype+"*";$$->ID = $2;$$->length =  (int)($4);} 
+        | declaration_specifiers IDENTIFIER '[' CONSTANTi ']' '=' '{' expression_list '}' ';'{$$ = new AST("VarDecl");$$->dtype = $1->tokentype+"*";$$->ID = $2;$$->length =  (int)($4);$$->child = $8->child;} 
         ;
 
 declaration_specifiers
         : type_qualifier type_specifier {}
         | type_specifier {$$ = $1;}
         ;
-/* 可以同时声明多个变量, int a, b ,c; */
 
-/* 可以只声明，也可以同时初始化 */
-
-
-identifier_list
+/* identifier_list
         : IDENTIFIER
         | identifier_list ',' IDENTIFIER
-        ;
+        ; */
 
 parameter_list
         : declaration_specifiers IDENTIFIER {$$ = new AST("ParmVarDecl"); AST* temp = new AST("ParmVarDecl");
                 temp->ID = $2; temp->dtype = $1->tokentype; $$->insert(temp);}
         | parameter_list ',' declaration_specifiers IDENTIFIER {$$ = $1; AST* temp = new AST("ParmVarDecl");
                 temp->ID = $4; temp->dtype = $3->tokentype; $$->insert(temp);}
+        | declaration_specifiers IDENTIFIER'['']'{
+                $$ = new AST("ParmVarDecl"); AST* temp = new AST("ParmVarDecl");
+                temp->ID = $2; temp->dtype = $1->tokentype+"*"; $$->insert(temp);
+        }
+        | parameter_list ',' declaration_specifiers IDENTIFIER '[' ']'{
+                $$ = $1; AST* temp = new AST("ParmVarDecl");
+                temp->ID = $4; temp->dtype = $3->tokentype+"*"; $$->insert(temp);
+        }
         ;        
 /* todo: 初始化数组{} */
 
@@ -174,7 +182,7 @@ expression
         | expression '<' expression   {$$ = new AST("BinaryOperator"); $$->binaryop="<";$$->insert($1);$$->insert($3);}  
         | expression '>' expression   {$$ = new AST("BinaryOperator"); $$->binaryop=">";$$->insert($1);$$->insert($3);}         
         | expression '=' expression {$$ = new AST("BinaryOperator");$$->binaryop="="; $$->insert($1);$$->insert($3);}
-        | IDENTIFIER '[' expression ']' {}
+        | IDENTIFIER '[' expression ']' {$$ = new AST("ArraySubscriptExpr");AST* temp = new AST("Identifier");temp->ID = $1;  $$->insert(temp);$$->insert($3); }
         | IDENTIFIER '(' expression_list ')' {$$ = new AST("CallExpr"); $$->ID = $1; $$->child = $3->child;}
         | IDENTIFIER {$$ = new AST("Identifier"); $$->ID = $1; } 
         | CONSTANTf {$$ = new AST("Constant"); $$->dvalue = $1; $$->dtype = "float"; }
@@ -184,8 +192,7 @@ expression
         ;
         /*  | unary_operator expression */
 
-/* assignment_expression
-        :   */
+
 
 /* 类型修饰符 */
 type_qualifier
@@ -198,9 +205,9 @@ type_specifier
         | INT {$$ = new AST("int");}
         | FLOAT {$$ = new AST("float");}
         | DOUBLE {$$ = new AST("double");}
-        | UNSIGNED {$$ = new AST("unsigned");}
-        | SIGNED  {$$ = new AST("signed");}
-        | AUTO {$$ = new AST("auto");}
+        /* | UNSIGNED {$$ = new AST("unsigned");}
+        | SIGNED  {$$ = new AST("signed");} */
+        /* | AUTO {$$ = new AST("auto");} */
         /* | struct_or_union_specifier
         | enum_specifier
         | TYPE_NAME */

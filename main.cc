@@ -13,7 +13,6 @@ int main(int argc, const char *argv[])
         return 0;
     }
     yyin = fopen(argv[1], "r");
-    // printf("begin parse\n");
     int result = yyparse();
     if(result == 0){
         printf("parse successfully!\n");
@@ -37,7 +36,7 @@ int main(int argc, const char *argv[])
     auto CodeGen = new codeGen();
     CodeGen->generate(head);
     CodeGen->print();
-    printf("Generating Objective Code...\n");
+    printf("Generating Object Code...\n");
     CodeGen->generate_o();
     return 0;
 }

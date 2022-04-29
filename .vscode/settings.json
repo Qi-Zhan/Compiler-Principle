@@ -60,6 +60,8 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "stdio.h": "c",
-        "set": "cpp"
+        "set": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     }
 }

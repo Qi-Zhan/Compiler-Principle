@@ -5,6 +5,7 @@ AST::AST(std::string name)
     this->id = AST::order++;
     this->parent = NULL;
     this->child = new std::vector<AST *>;
+    this->length = 0;
 }
 
 AST::~AST()
@@ -22,6 +23,10 @@ void AST::print(int n)
     if (this->tokentype == "VarDecl" || this->tokentype == "ParmVarDecl")
     {
         std::cout << " "<< this->ID<<" "<<this->dtype;
+        if (this->length >0) // 数组
+        {
+            printf(" [%d]", this->length);
+        }
     }
     else if (this->tokentype == "BinaryOperator")
     {
@@ -42,6 +47,10 @@ void AST::print(int n)
     else if (this->tokentype == "CallExpr")
     {
         printf(" %s %s", this->ID.c_str(), this->dtype.c_str());
+    }
+    else if (this->tokentype == "ArraySubscriptExpr")
+    {
+        printf(" %s",  this->dtype.c_str());
     }
     printf("\n");
     for (int i = 0; i < this->child->size(); i++)
