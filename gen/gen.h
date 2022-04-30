@@ -44,6 +44,7 @@ private:
     llvm::GlobalVariable *createGlobal(llvm::Type *type, std::string name);
     int createGlobalt(AST* ch);
     int createArray(AST *node);
+    int createGlobalarray(AST *node);
 
 public:
     AST *head;

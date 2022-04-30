@@ -5,10 +5,8 @@ static std::unique_ptr<LLVMContext> TheContext;
 static std::unique_ptr<Module> TheModule;
 static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, GlobalVariable *> GlobalValues;
-// static std::map<std::string, Value *> NamedValues;
 static std::map<std::string, AllocaInst *> NamedValues;
 static std::map<AST *, AllocaInst *> mySymbolTable;
-// static llvm::ValueSymbolTable *llvm_SymbolTable;
 static llvm::BasicBlock *CurrentMerge = nullptr;
 static llvm::BasicBlock *CurrentCond = nullptr;
 
@@ -19,6 +17,39 @@ static void InitializeModule()
     TheModule = std::make_unique<Module>("my cool ssc", *TheContext);
     // Create a new builder for the module.
     Builder = std::make_unique<IRBuilder<>>(*TheContext);
+}
+Type *str2type(std::string str)
+{
+
+    if (str == "int")
+    {
+        return Builder->getInt32Ty();
+    }
+    else if (str == "float")
+    {
+        return Builder->getFloatTy();
+    }
+    else if (str == "double")
+    {
+        return Builder->getDoubleTy();
+    }
+    else if (str=="int*"){
+        // return Builder->getInt32Ty();
+        return Builder->getInt32Ty()->getPointerTo();
+    }
+    else if (str == "float*")
+    {
+        return Builder->getFloatTy()->getPointerTo();
+    }
+    else if (str == "double*")
+    {
+        return Builder->getDoubleTy()->getPointerTo();
+    }
+    else if(str=="void"){
+        return Builder->getVoidTy();
+    }
+    printf("No Such Type in str2type\n");
+    return Builder->getInt32Ty();
 }
 static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction, const std::string &VarName, Type* valuetype)
 {
@@ -51,9 +82,23 @@ Value *codeGen::binaryop(AST *node){
         {
             AST *ch = node->child->at(0);
             Value *V = codeGen::generate(ch->child->at(1)); // 下标
-            AllocaInst *array_alloc = mySymbolTable[ch->child->at(0)->ref];
-            Variable = Builder->CreateGEP(array_alloc, V, "array_index");
-            // Variable = mySymbolTable[node->child->at(0)->child->at(0)]
+            if (ch->child->at(0)->ref->tokentype == "ParmVarDecl"){ // 数组作为参数
+                auto point_to_array = mySymbolTable[ch->child->at(0)->ref];
+                auto array = Builder->CreateLoad(point_to_array);
+                Variable = Builder->CreateGEP(array, V, "array_index");
+            }else{ 
+                AllocaInst *array_alloc = mySymbolTable[ch->child->at(0)->ref]; //局部数组
+                if (!array_alloc) // 全局数组
+                {
+                    GlobalVariable *array_alloc = GlobalValues[ch->child->at(0)->ID];
+                    Variable = Builder->CreateGEP(str2type(ch->dtype), array_alloc, V, "global_array_index");
+                }
+                else
+                {
+                    Variable = Builder->CreateGEP(array_alloc, V, "array_index");
+                }
+            }
+
         }else{
             Variable = mySymbolTable[node->child->at(0)->ref];
         }
@@ -152,24 +197,7 @@ GlobalVariable* codeGen::createGlobal(Type* type, std::string name){
     GlobalVariable* v = TheModule->getNamedGlobal(name);
     return v;
 }
-Type* str2type(std::string str){
-    if (str == "int")
-    {
-        return Builder->getInt32Ty();
-    }
-    else if (str == "float")
-    {
-        return Builder->getFloatTy();
-    }
-    else if (str == "double")
-    {
-        return Builder->getDoubleTy();
-    }
-    else{
-        printf("No Such Type in str2type\n");
-        return Builder->getInt32Ty();
-    }
-}
+
 codeGen::codeGen(){
     InitializeModule();
 }
@@ -235,7 +263,39 @@ int codeGen::createGlobalt(AST*ch){
     GlobalValues.insert({ch->ID, gv});
     return 0;
 }
+int codeGen::createGlobalarray(AST* node){
+    Type *type = str2type(node->dtype.substr(0, node->dtype.size() - 1));
+    ArrayType *ArrayTy_0 = ArrayType::get(type, node->length);
+    PointerType *PointerTy_1 = PointerType::get(ArrayTy_0, 0);
+    GlobalVariable *gv = codeGen::createGlobal(ArrayTy_0, node->ID);
+    // GlobalVariable *gv = new GlobalVariable(*TheModule, ArrayTy_0, false, GlobalValue::CommonLinkage, 0, node->ID);
+    if (node->child->size()==0) // 初始为0
+    {
+        ConstantAggregateZero *const_array_2 = ConstantAggregateZero::get(ArrayTy_0);
+        // Global Variable Definitions
+        gv->setInitializer(const_array_2);
+    }else{
+        std::vector<llvm::Constant *> values;
+        std::string childtype = node->child->at(0)->dtype;
+        for (int i = 0; i < node->child->size(); i++)
+        {
+            Value *v = codeGen::generate(node->child->at(i));
+            if (childtype=="int")
+            {
+                ConstantInt *CI = dyn_cast<ConstantInt>(v);
+                values.push_back(CI);
+            }else{
+                ConstantFP *CI = dyn_cast<ConstantFP>(v);
+                values.push_back(CI);
+            }
+        }
+        llvm::Constant *init = llvm::ConstantArray::get(ArrayTy_0, values);
+        gv->setInitializer(init);
+    }
+    GlobalValues.insert({node->ID, gv});
 
+    return 0;
+}
 int codeGen::createArray(AST* node){
     ArrayType* arrayType = ArrayType::get(str2type(node->dtype.substr(0, node->dtype.size() - 1)), node->length);
     APInt i = APInt(32, (int)node->length, true);
@@ -261,8 +321,8 @@ Value *codeGen::generate(AST *node){
                 AST *ch = node->child->at(i);
                 if(ch->length == 0) // 声明全局变量
                     codeGen::createGlobalt(ch);
-                else //数组
-                    codeGen::createArray(ch);
+                else // 全局数组
+                    codeGen::createGlobalarray(ch);
             }
             else // function define
                 codeGen::generate(node->child->at(i));
@@ -287,7 +347,7 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "Identifier")
     {
-        // AllocaInst *V = NamedValues[node->ID];
+        // printf("Find variable name %s \n", node->ID.c_str());
         AllocaInst *V = mySymbolTable[node->ref];
         if (!V) 
         {
@@ -296,9 +356,8 @@ Value *codeGen::generate(AST *node){
             auto block = Builder->GetInsertBlock();
             return new LoadInst(str2type(node->dtype), X, node->ID, block);
         }
+        // printf("Find variable name %s \n", node->ID.c_str());
         return Builder->CreateLoad(V->getAllocatedType(),V, node->ID.c_str());
-        // auto symbol = block->getValueSymbolTable();
-        // Value* V = symbol->lookup(node->ID);
     }
     else if (node->tokentype == "BinaryOperator")
     {
@@ -328,37 +387,13 @@ Value *codeGen::generate(AST *node){
             else
                 para++;
         }
-        // std::vector<Type *> parameter(para, Type::getDoubleTy(*TheContext));
         std::vector<Type *> parameter;
         for (int i = 0; i < para; i++){
             // printf("%s\n", node->child->at(i)->dtype.c_str());
-            if (node->child->at(i)->dtype == "int")
-            {
-                parameter.push_back(Type::getInt32Ty(*TheContext));
-                // parameter[i] = (Type::getInt32Ty(*TheContext));
-            }
-            else if (node->child->at(i)->dtype == "float")
-            {
-                parameter.push_back(Type::getFloatTy(*TheContext));
-                // parameter[i] = (Type::getFloatTy(*TheContext));
-            }else //double
-            {
-                parameter.push_back(Type::getDoubleTy(*TheContext));
-                // parameter[i] = (Type::getDoubleTy(*TheContext));
-            }
+            parameter.push_back(str2type(node->child->at(i)->dtype));
         }
         FunctionType *FT;
-        // std::vector<Type *> Doubles(para, Type::getDoubleTy(*TheContext));
-        if (node->dtype == "int"){
-            FT = FunctionType::get(Type::getInt32Ty(*TheContext), parameter, false);
-        }
-        else if (node->dtype == "float"){
-            FT = FunctionType::get(Type::getFloatTy(*TheContext), parameter, false);
-        }
-        else // double
-        {
-            FT = FunctionType::get(Type::getDoubleTy(*TheContext), parameter, false);
-        }
+        FT = FunctionType::get(str2type(node->dtype), parameter, false);
         Function *F =
             Function::Create(FT, Function::ExternalLinkage, node->ID, TheModule.get());
         unsigned Idx = 0;
@@ -541,6 +576,23 @@ Value *codeGen::generate(AST *node){
     else if (node->tokentype == "ArraySubscriptExpr"){ // 数组访问
         Value *V = codeGen::generate(node->child->at(1)); // 下标
         AllocaInst *array_alloc = mySymbolTable[node->child->at(0)->ref];
+        if(!array_alloc){ // 全局数组
+            auto array_alloc = GlobalValues[node->child->at(0)->ID];
+            if(!array_alloc){
+                printf("global array wrong!!!\n");
+            }
+            auto ptr = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
+            // Value *ptr = Builder->CreateGEP(array_alloc, V, "global_array_index");
+            return Builder->CreateLoad(ptr, "load_global_array");
+
+        }
+        if (node->child->at(0)->ref->tokentype == "ParmVarDecl") // 数组作为参数
+        {
+            auto point_to_array = mySymbolTable[node->child->at(0)->ref];
+            auto array = Builder->CreateLoad(point_to_array);
+            Value *ptr = Builder->CreateGEP(array, V, "array_index");
+            return Builder->CreateLoad(ptr, "load_array");
+        }
         Value *ptr = Builder->CreateGEP(array_alloc, V, "array_index");
         return Builder->CreateLoad(ptr, "load_array");
     }
@@ -553,7 +605,6 @@ codeGen::~codeGen()
 }
 
 void codeGen::print(){
-    // printf("print successfully!\n");
     TheModule->print(errs(), nullptr);
 }
 

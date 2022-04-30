@@ -17,5 +17,6 @@ cleant:
 	rm -f output.o
 	rm -f a.out
 	rm -f test.o
+	rm -f mytest.ll
 
 	
