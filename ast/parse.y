@@ -155,7 +155,6 @@ selection_statement
 
 iteration_statement
         : WHILE '(' expression ')' statement {$$ = new AST("WhileStmt"); $$->insert($3);$$->insert($5);}
-        /* | DO statement WHILE '(' expression ')' ';' {} */
         | FOR '(' expression_statement expression_statement ')' statement {$$ = new AST("ForStmt");$$->insert( new AST("EmptyInit")) ;$$->insert($3);$$->insert($4);$$->insert($6);}
         | FOR '(' expression_statement expression_statement expression ')' statement {$$ = new AST("ForStmt");$$->insert($3);$$->insert($4);$$->insert($5);$$->insert($7);}
         ;
@@ -184,11 +183,13 @@ expression
         | expression '=' expression {$$ = new AST("BinaryOperator");$$->binaryop="="; $$->insert($1);$$->insert($3);}
         | IDENTIFIER '[' expression ']' {$$ = new AST("ArraySubscriptExpr");AST* temp = new AST("Identifier");temp->ID = $1;  $$->insert(temp);$$->insert($3); }
         | IDENTIFIER '(' expression_list ')' {$$ = new AST("CallExpr"); $$->ID = $1; $$->child = $3->child;}
+        | IDENTIFIER '(' ')' {$$ = new AST("CallExpr"); $$->ID = $1;}
         | IDENTIFIER {$$ = new AST("Identifier"); $$->ID = $1; } 
         | CONSTANTf {$$ = new AST("Constant"); $$->dvalue = $1; $$->dtype = "float"; }
         | CONSTANTi {$$ = new AST("Constant"); $$->dvalue = $1; $$->dtype = "int";}
         | STRING_LITERAL {}
-        | '(' expression ')' {$$ = new AST("ParenExpr"); $$->insert($2);}
+        | '(' expression ')' {$$ = $2;}
+        /* | '(' expression ')' {$$ = new AST("ParenExpr"); $$->insert($2);} */
         ;
         /*  | unary_operator expression */
 

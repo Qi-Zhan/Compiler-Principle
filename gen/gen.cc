@@ -90,8 +90,10 @@ Value *codeGen::binaryop(AST *node){
                 AllocaInst *array_alloc = mySymbolTable[ch->child->at(0)->ref]; //局部数组
                 if (!array_alloc) // 全局数组
                 {
-                    GlobalVariable *array_alloc = GlobalValues[ch->child->at(0)->ID];
-                    Variable = Builder->CreateGEP(str2type(ch->dtype), array_alloc, V, "global_array_index");
+                    GlobalVariable *array_alloc = GlobalValues[ch->child->at(0)->ID]; 
+                    // to check
+                    Variable = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
+                    // Variable = Builder->CreateGEP(str2type(ch->dtype), array_alloc, V, "global_array_index");
                 }
                 else
                 {
@@ -596,6 +598,7 @@ Value *codeGen::generate(AST *node){
         Value *ptr = Builder->CreateGEP(array_alloc, V, "array_index");
         return Builder->CreateLoad(ptr, "load_array");
     }
+    
     return nullptr;
 }
 

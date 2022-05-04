@@ -70,6 +70,7 @@ void yyerror (const char *s);
 <<EOF>>                  { yyterminate();}
 \n                   {}
 " "                 {}
+"//".*\n {}
 .                      {ECHO; yyerror (" unexpected character");}
 
 %%
