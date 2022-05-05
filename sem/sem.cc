@@ -117,7 +117,6 @@ int env::build_env(AST* node){
         if (token == "BinaryOperator")
         // check = left identifier todo
         {
-
             if (arith.count(node->binaryop))
             {
                 node->dtype = int_to_str[max(str_to_int[node->child->at(0)->dtype], str_to_int[node->child->at(1)->dtype])];

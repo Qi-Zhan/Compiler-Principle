@@ -7,9 +7,9 @@ static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, GlobalVariable *> GlobalValues;
 static std::map<std::string, AllocaInst *> NamedValues;
 static std::map<AST *, AllocaInst *> mySymbolTable;
-static llvm::BasicBlock *CurrentMerge = nullptr;
-static llvm::BasicBlock *CurrentCond = nullptr;
-
+static llvm::BasicBlock *Break = nullptr;
+static llvm::BasicBlock *Continue = nullptr;
+int testBreak = 0;
 static void InitializeModule()
 {
     // Open a new context and module.
@@ -62,8 +62,8 @@ Value *codeGen::binaryop(AST *node){
     Value *R = codeGen::generate(node->child->at(1));
     std::string type0 = node->child->at(0)->dtype;
     std::string type1 = node->child->at(1)->dtype;
-    bool allint = (node->dtype == "int");
-    // std::cout << type0 << type1 << std::endl;
+    bool allint = (type0 == "int" && type1 == "int");
+    // bool allint = (node->dtype == "int");
     // convert type
     if (type0 != type1)
     {
@@ -91,9 +91,19 @@ Value *codeGen::binaryop(AST *node){
                 if (!array_alloc) // 全局数组
                 {
                     GlobalVariable *array_alloc = GlobalValues[ch->child->at(0)->ID]; 
-                    // to check
-                    Variable = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
-                    // Variable = Builder->CreateGEP(str2type(ch->dtype), array_alloc, V, "global_array_index");
+                    Value *ptr;
+                    if (ch->child->at(0)->ref->dtype == "int*")
+                    {
+                        Variable = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
+                    }
+                    else if (ch->child->at(0)->ref->dtype == "float*")
+                    {
+                        Variable = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantFP::get(Type::getFloatTy(*TheContext), 0), V});
+                    }
+                    else
+                    {
+                        Variable = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantFP::get(Type::getDoubleTy(*TheContext), 0), V});
+                    }
                 }
                 else
                 {
@@ -156,7 +166,6 @@ Value *codeGen::binaryop(AST *node){
     }
     else if (node->binaryop == "==")
     {
-        // return Builder->CreateFCmp
         if (allint)
             return Builder->CreateICmpEQ(L, R, "compeq");
         else
@@ -306,11 +315,17 @@ int codeGen::createArray(AST* node){
     for (int i = 0; i < node->child->size(); i++) // 初始化
     {
         Value *V = codeGen::generate(node->child->at(i));
-        // auto zero = ConstantInt::get(*TheContext, llvm::APInt(32, 0, true));
+        if (node->child->at(i)->dtype == "int" && node->dtype=="float*")
+        {
+            V = Builder->CreateCast(Instruction::SIToFP, V, str2type(node->dtype.substr(0, node->dtype.size() - 1)));
+        }
+        if (node->child->at(i)->dtype == "float" && node->dtype == "int*")
+        {
+            V = Builder->CreateCast(Instruction::FPToSI, V, str2type(node->dtype.substr(0, node->dtype.size() - 1)));
+        }
         auto index = ConstantInt::get(*TheContext, llvm::APInt(32, i, true));
         Value* ptr =  Builder->CreateGEP(array_alloc, index, "array_index");
         Builder->CreateStore(V, ptr);
-        // auto ptr = GetElementPtrInst::Create(array_alloc, {zero, index}, " ", bb);
     }
     return 0;
 }
@@ -466,7 +481,6 @@ Value *codeGen::generate(AST *node){
         // printf("get if\n");
         if (!CondV)
             return nullptr;
-        // Convert condition to a bool by comparing non-equal to 0.
         // CondV = Builder->CreateFCmpONE(CondV, ConstantInt::get(*TheContext, APInt(i)), "ifcond");
         Function *TheFunction = Builder->GetInsertBlock()->getParent();
         // Create blocks for the then and else cases.  Insert the 'then' block at the
@@ -482,7 +496,6 @@ Value *codeGen::generate(AST *node){
         codeGen::generate(node->child->at(1));
         // if (!ThenV)
         //     return nullptr;
-        // printf("elseelsel           selse\n");
         Builder->CreateBr(MergeBB);
         // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
         ThenBB = Builder->GetInsertBlock();
@@ -503,10 +516,11 @@ Value *codeGen::generate(AST *node){
     }
     else if (node->tokentype == "ContinueStmt"){
         // BasicBlock b = Builder->GetInsertBlock()->getParent();
-        Builder->CreateBr(CurrentCond);
+        Builder->CreateBr(Continue);
     }
     else if (node->tokentype == "BreakStmt"){
-        Builder->CreateBr(CurrentMerge);
+        Builder->CreateBr(Break);
+        testBreak = 1;
     }
     else if (node->tokentype == "VarDecl"){ // 局部变量
         if (node->length>0) // 数组
@@ -536,7 +550,9 @@ Value *codeGen::generate(AST *node){
         BasicBlock *entryBB = BasicBlock::Create(*TheContext, "entry", TheFunction);
         BasicBlock *loopBB = BasicBlock::Create(*TheContext, "loop", TheFunction);
         BasicBlock *endLoopBB = BasicBlock::Create(*TheContext, "endloop", TheFunction);
+        Continue = endLoopBB;
         BasicBlock *endEntryBB = BasicBlock::Create(*TheContext, "endentry", TheFunction);
+        Break = endEntryBB;
         Builder->CreateBr(entryBB);
         // entry
         Builder->SetInsertPoint(entryBB);
@@ -548,14 +564,22 @@ Value *codeGen::generate(AST *node){
         Builder->SetInsertPoint(loopBB);
         // loop
         codeGen::generate(node->child->at(3));
+
+        if (testBreak==1)
+        {
+            testBreak = 0;
+        }else
+
         Builder->CreateBr(endLoopBB);
         // endLoopBB
         Builder->SetInsertPoint(endLoopBB);
         codeGen::generate(node->child->at(2));
+        
         Value *EndCond_ = codeGen::generate(node->child->at(1)); // 判断条件
         Builder->CreateCondBr(EndCond_, loopBB, endEntryBB);
         // endInit
         Builder->SetInsertPoint(endEntryBB);
+        verifyFunction(*TheFunction);
         // Builder->CreateRet(initVal);
     }
     else if (node->tokentype == "WhileStmt"){
@@ -583,7 +607,17 @@ Value *codeGen::generate(AST *node){
             if(!array_alloc){
                 printf("global array wrong!!!\n");
             }
-            auto ptr = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
+            Value* ptr;
+            if (node->child->at(0)->ref->dtype == "int*")
+            {
+                ptr = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantInt::get(Type::getInt32Ty(*TheContext), 0), V});
+            }
+            else if (node->child->at(0)->ref->dtype == "float*")
+            {
+                ptr = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantFP::get(Type::getFloatTy(*TheContext), 0), V});
+            }else{
+                ptr = Builder->CreateGEP(array_alloc, std::vector<Value *>{ConstantFP::get(Type::getDoubleTy(*TheContext), 0), V});
+            }
             // Value *ptr = Builder->CreateGEP(array_alloc, V, "global_array_index");
             return Builder->CreateLoad(ptr, "load_global_array");
 
@@ -596,7 +630,7 @@ Value *codeGen::generate(AST *node){
             return Builder->CreateLoad(ptr, "load_array");
         }
         Value *ptr = Builder->CreateGEP(array_alloc, V, "array_index");
-        return Builder->CreateLoad(ptr, "load_array");
+        return Builder->CreateLoad(str2type(node->dtype) ,ptr, "load_array");
     }
     
     return nullptr;
