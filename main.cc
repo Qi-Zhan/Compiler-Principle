@@ -2,7 +2,7 @@
 #include "ast/ast.h"
 #include "sem/sem.h"
 #include "gen/gen.h"
-
+#include "vis/vis.h"
 extern int yyparse();
 extern FILE *yyin;
 extern AST* head;
@@ -30,6 +30,9 @@ int main(int argc, const char *argv[])
         // semantic->table->main_env->print_env(0);
         printf("Pass Semantic Checking!\n");
     }
+    std::string outdot = "out.dot";
+    auto vis = new Visualize(head, outdot);
+    vis->generateDOT();
     printf("Decorated AST!\n");
     head->print(0); // print AST
     printf("Generating IR...\n");
