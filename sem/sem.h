@@ -3,11 +3,6 @@
 #include <unordered_map>
 #include <set>
 #include "../ast/ast.h"
-/*
-每个env就是一个{}(compound stmt)
-重要的是里面的define ref 
-同时完成类型推断？
-*/
 class env
 {
 public:
@@ -35,12 +30,16 @@ public:
 
 class semanticAnalysis
 {
+private:
+    int optControlFlow(AST *node);
+    int constantFold(AST *node);
+
 public:
     symbolTable *table;
-
     semanticAnalysis(AST *node);
     ~semanticAnalysis();
-    int type_inference();
+    int opt(AST *node);
+    
 };
 
 #endif

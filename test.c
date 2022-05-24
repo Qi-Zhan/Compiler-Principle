@@ -24,13 +24,14 @@
 //     return 0;
 // }
 
-
-
-void printArray(int array[], int size) {
-    for (int i = 0; i < size; ++i) {
-        printf("%d  ", array[i]);
-    }
-    printf("\n");
+int quickSort(int array[], int low, int high);
+void printArray(int array[], int size)
+{
+  for (int i = 0; i < size; ++i)
+  {
+    printf("%d  ", array[i]);
+  }
+  printf("\n");
 }
 int main() {
   int data[] = {8, 7, 2, 1, 0, 9, 6,1,25,8,111,4,-1};

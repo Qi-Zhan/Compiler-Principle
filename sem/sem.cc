@@ -10,11 +10,108 @@ semanticAnalysis::semanticAnalysis(AST *node)
 semanticAnalysis::~semanticAnalysis(){
 
 }
-int semanticAnalysis::type_inference(){
+
+int semanticAnalysis::constantFold(AST* node){
+    for (int i = 0; i < node->child->size(); i++)
+    {
+        constantFold(node->child->at(i));
+    }
+    if (node->tokentype == "BinaryOperator")
+    {
+        if (node->child->at(0)->tokentype == "Constant" && node->child->at(1)->tokentype == "Constant")
+        {
+            node->tokentype = "Constant";
+            float L = node->child->at(0)->dvalue;
+            float R = node->child->at(1)->dvalue;
+            float res;
+            if (node->binaryop == "=")
+            {
+                res = L;
+            }
+            if (node->binaryop == "+")
+            {
+                res = L + R;
+            }
+            else if (node->binaryop == "-")
+            {
+                res = L - R;
+            }
+            else if (node->binaryop == "*")
+            {
+                res = L * R;
+            }
+            else if (node->binaryop == "/")
+            {
+                res = L / R;
+            }
+            else if (node->binaryop == "<")
+            {
+                res = L < R;
+            }
+            else if (node->binaryop == ">")
+            {
+                res = L > R;
+            }
+            else if (node->binaryop == "==")
+            {
+                res = L == R;
+            }
+            else if (node->binaryop == ">=")
+            {
+                res = L >= R;
+            }
+            else if (node->binaryop == "<=")
+            {
+                res = L <= R;
+            }
+            else if (node->binaryop == "!=")
+            {
+                res = L != R;
+            }
+            else if (node->binaryop == "&&")
+            {
+                res = L && R;
+            }
+            else if (node->binaryop == "||")
+            {
+                res = L || R;
+            }
+            node->dvalue = res;
+            if (node->dtype == "int")
+            {
+                node->dvalue = int(node->dvalue);
+            }
+            node->child->clear();
+        }
+    }
     return 0;
 }
-
-symbolTable::symbolTable(AST* node)
+int semanticAnalysis::optControlFlow(AST*node){
+    for (int i = 0; i < node->child->size(); i++)
+    {
+        optControlFlow(node->child->at(i));
+    }
+    if (node->tokentype == "IfStmt"){
+        if(node->child->size()==3 && node->child->at(0)->tokentype=="Constant"){
+            int j = int(node->child->at(0)->dvalue);
+            if (j == 0)
+            {
+                *node = *node->child->at(2);
+            }
+            else
+            {
+                *node = *node->child->at(1);
+            }
+        }
+    }
+    return 0;
+}
+int semanticAnalysis::opt(AST* node){
+    constantFold(node);
+    optControlFlow(node);
+    return 0;
+}
+symbolTable::symbolTable(AST *node)
 {
     this->head = node;
     this->main_env = new env();

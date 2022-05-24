@@ -33,6 +33,7 @@ int main(int argc, const char *argv[])
     std::string outdot = "out.dot";
     auto vis = new Visualize(head, outdot);
     vis->generateDOT();
+    semantic->opt(head);
     printf("Decorated AST!\n");
     head->print(0); // print AST
     printf("Generating IR...\n");
